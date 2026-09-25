@@ -1,202 +1,201 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 actions:
-- set-value: clang
-- find-program: null
-- env-assign: AS
-- env-assign: CC
-- set-value: clang++
-- find-program: null
-- env-assign: CXX
-- set-value: llvm-ar
-- substitute: null
-- find-program: null
-- env-assign: AR
-- set-value: clang
-- env-assign: AS
-- env-assign: ASM_NAME
-- set-value:
-  - -c
-  - -o
-- env-assign: AS_TGT_F
-- set-value:
-  - -o
-- env-assign: ASLNK_TGT_F
-- set-value:
-  - --target=${ARCH}-rtems${__RTEMS_MAJOR__}
-  - --sysroot=${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}
-  - --gcc-toolchain=${PREFIX}
-  - -Qunused-arguments
-  - -isystem
-  - ${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}/include
-- substitute: null
-- env-append: ABI_FLAGS
-- script: |
-    import os
-    import stat
-    import textwrap
+  - set-value: clang
+  - find-program: null
+  - env-assign: AS
+  - env-assign: CC
+  - set-value: clang++
+  - find-program: null
+  - env-assign: CXX
+  - set-value: llvm-ar
+  - substitute: null
+  - find-program: null
+  - env-assign: AR
+  - set-value: clang
+  - env-assign: AS
+  - env-assign: ASM_NAME
+  - set-value:
+      - -c
+      - -o
+  - env-assign: AS_TGT_F
+  - set-value:
+      - -o
+  - env-assign: ASLNK_TGT_F
+  - set-value:
+      - --target=${ARCH}-rtems${__RTEMS_MAJOR__}
+      - --sysroot=${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}
+      - --gcc-toolchain=${PREFIX}
+      - -Qunused-arguments
+      - -isystem
+      - ${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}/include
+  - substitute: null
+  - env-append: ABI_FLAGS
+  - script: |
+      import os
+      import stat
+      import textwrap
 
-    conf.load("ar asm clang clang++ gccdeps")
+      conf.load("ar asm clang clang++ gccdeps")
 
-    arch = conf.env['ARCH']
-    arch = arch[0] if isinstance(arch, list) else arch
-    major = conf.env['__RTEMS_MAJOR__']
-    major = major[0] if isinstance(major, list) else major
-    triple = f"{arch}-rtems{major}"
-    gxx = f"{triple}-g++"
-    gcc = f"{triple}-gcc"
+      arch = conf.env['ARCH']
+      arch = arch[0] if isinstance(arch, list) else arch
+      major = conf.env['__RTEMS_MAJOR__']
+      major = major[0] if isinstance(major, list) else major
+      triple = f"{arch}-rtems{major}"
+      gxx = f"{triple}-g++"
+      gcc = f"{triple}-gcc"
 
-    clang_res = conf.cmd_and_log(conf.env.CC + ['--print-resource-dir']).strip()
-    conf.env.append_value('CFLAGS', ['-isystem', f"{clang_res}/include"])
-    conf.env.append_value('CXXFLAGS', ['-isystem', f"{clang_res}/include"])
+      clang_res = conf.cmd_and_log(conf.env.CC + ['--print-resource-dir']).strip()
+      conf.env.append_value('CFLAGS', ['-isystem', f"{clang_res}/include"])
+      conf.env.append_value('CXXFLAGS', ['-isystem', f"{clang_res}/include"])
 
-    libstdcxx = conf.cmd_and_log([gxx, '-print-file-name=include/c++']).strip()
-    for d in (libstdcxx,
-              os.path.join(libstdcxx, triple),
-              os.path.join(libstdcxx, 'backward')):
-        if os.path.isdir(d):
-            conf.env.append_value('CXXFLAGS', ['-isystem', d])
+      libstdcxx = conf.cmd_and_log([gxx, '-print-file-name=include/c++']).strip()
+      for d in (libstdcxx,
+                os.path.join(libstdcxx, triple),
+                os.path.join(libstdcxx, 'backward')):
+          if os.path.isdir(d):
+              conf.env.append_value('CXXFLAGS', ['-isystem', d])
 
-    clang_only_prefixes = ('--target', '--gcc-toolchain', '--sysroot', '-Qunused-arguments')
+      clang_only_prefixes = ('--target', '--gcc-toolchain', '--sysroot', '-Qunused-arguments')
 
-    compile_only, gcc_safe, skip = [], [], False
-    for f in conf.env.ABI_FLAGS:
-        if skip:
-            compile_only.append(f)
-            skip = False
-            continue
-        if f == '-isystem':
-            compile_only.append(f)
-            skip = True
-            continue
-        if f.startswith(clang_only_prefixes):
-            compile_only.append(f)
-        else:
-            gcc_safe.append(f)
+      compile_only, gcc_safe, skip = [], [], False
+      for f in conf.env.ABI_FLAGS:
+          if skip:
+              compile_only.append(f)
+              skip = False
+              continue
+          if f == '-isystem':
+              compile_only.append(f)
+              skip = True
+              continue
+          if f.startswith(clang_only_prefixes):
+              compile_only.append(f)
+          else:
+              gcc_safe.append(f)
 
-    conf.env.ABI_FLAGS = gcc_safe
-    conf.env.append_value('CFLAGS', compile_only)
-    conf.env.append_value('CXXFLAGS', compile_only)
-    conf.env.append_value('ASFLAGS', compile_only)
+      conf.env.ABI_FLAGS = gcc_safe
+      conf.env.append_value('CFLAGS', compile_only)
+      conf.env.append_value('CXXFLAGS', compile_only)
+      conf.env.append_value('ASFLAGS', compile_only)
 
-    conf.env.LINK_CC = [gcc]
-    conf.env.LINK_CXX = [gxx]
-    conf.env.append_value('LINKFLAGS', ['-qrtems'])
-
-
-    # Generate the aspis-cc wrapper (PYTHON VERSION + DEBUG IR)
-
-    wrapper_src = textwrap.dedent('''\
-        #!/usr/bin/env python3
-        import sys
-        import os
-        import subprocess
-
-        CLANG = "/opt/rtems-llvm/rtems/bin/clang"
-        OPT = "/opt/rtems-llvm/rtems/bin/opt"
-        PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
-
-        HARDEN_TARGETS = [
-            "timespecisvalid.c",
-            "aspis_sample_hardened/workload.c"
-        ]
-
-        args = sys.argv[1:]
+      conf.env.LINK_CC = [gcc]
+      conf.env.LINK_CXX = [gxx]
+      conf.env.append_value('LINKFLAGS', ['-qrtems'])
 
 
-        src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
+      # Generate the aspis-cc wrapper (PYTHON VERSION + DEBUG IR)
+
+      wrapper_src = textwrap.dedent('''\
+          #!/usr/bin/env python3
+          import sys
+          import os
+          import subprocess
+
+          CLANG = "/opt/rtems-llvm/rtems/bin/clang"
+          OPT = "/opt/rtems-llvm/rtems/bin/opt"
+          PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
+
+          HARDEN_TARGETS = [
+              "timespecisvalid.c",
+              "aspis_sample_hardened/workload.c",
+              "threadstackallocate.c"
+          ]
+
+          args = sys.argv[1:]
 
 
-        needs_hardening = any(target in src for target in HARDEN_TARGETS) if src else False
-        
-        if not needs_hardening:
-            os.execv(CLANG, [CLANG] + args)
+          src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
 
 
-        out = None
-        flags = []
-        skip_next = False
-
-        for i, a in enumerate(args):
-            if skip_next:
-                skip_next = False
-                continue
-            
-            if a in ('-c', '-S'):
-                continue
-            if a == '-o':
-                out = args[i+1]
-                skip_next = True
-                continue
-            if a.startswith('-o') and len(a) > 2:
-                out = a[2:]
-                continue
-            if a in ('-MF', '-MT', '-MQ'):
-                skip_next = True
-                continue
-            if a in ('-MMD', '-MD', '-MP'):
-                continue
-            if a == src:
-                continue
-                
-            flags.append(a)
-
-        if not out:
-            print("[aspis-cc] Errore: flag di output (-o) non trovato.", file=sys.stderr)
-            sys.exit(1)
-
-        depfile = out.rsplit('.o', 1)[0] + ".d" if out.endswith('.o') else out + ".d"
-
-       
-        def run_cmd(cmd):
-            try:
-                subprocess.run(cmd, check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"[aspis-cc] Errore comando: {' '.join(cmd)}", file=sys.stderr)
-                sys.exit(e.returncode)
+          needs_hardening = any(target in src for target in HARDEN_TARGETS) if src else False
+          
+          if not needs_hardening:
+              os.execv(CLANG, [CLANG] + args)
 
 
-        # DEBUG IR
+          out = None
+          flags = []
+          skip_next = False
 
-        tmp = "/tmp/aspis_debug"
-        os.makedirs(tmp, exist_ok=True)
+          for i, a in enumerate(args):
+              if skip_next:
+                  skip_next = False
+                  continue
+              
+              if a in ('-c', '-S'):
+                  continue
+              if a == '-o':
+                  out = args[i+1]
+                  skip_next = True
+                  continue
+              if a.startswith('-o') and len(a) > 2:
+                  out = a[2:]
+                  continue
+              if a in ('-MF', '-MT', '-MQ'):
+                  skip_next = True
+                  continue
+              if a in ('-MMD', '-MD', '-MP'):
+                  continue
+              if a == src:
+                  continue
+                  
+              flags.append(a)
 
-        a_ll, b_ll, c_ll = f"{tmp}/a.ll", f"{tmp}/b.ll", f"{tmp}/c.ll"
-        d_ll, e_ll, f_ll = f"{tmp}/d.ll", f"{tmp}/e.ll", f"{tmp}/f.ll"
+          if not out:
+              print("[aspis-cc] Errore: flag di output (-o) non trovato.", file=sys.stderr)
+              sys.exit(1)
+
+          depfile = out.rsplit('.o', 1)[0] + ".d" if out.endswith('.o') else out + ".d"
+
+         
+          def run_cmd(cmd):
+              try:
+                  subprocess.run(cmd, check=True)
+              except subprocess.CalledProcessError as e:
+                  print(f"[aspis-cc] Errore comando: {' '.join(cmd)}", file=sys.stderr)
+                  sys.exit(e.returncode)
 
 
-        run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
+          # DEBUG IR
+
+          tmp = "/tmp/aspis_debug"
+          os.makedirs(tmp, exist_ok=True)
+
+          a_ll, b_ll, c_ll = f"{tmp}/a.ll", f"{tmp}/b.ll", f"{tmp}/c.ll"
+          d_ll, e_ll, f_ll = f"{tmp}/d.ll", f"{tmp}/e.ll", f"{tmp}/f.ll"
 
 
-        run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", a_ll, "-o", b_ll, "-S"])
-        
-
-        run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", b_ll, "-o", c_ll, "-S"])
-        
-        run_cmd([OPT, "-passes=simplifycfg", c_ll, "-o", d_ll, "-S"])
-        run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", d_ll, "-o", e_ll, "-S"])
-        run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", e_ll, "-o", f_ll, "-S"])
+          run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
 
 
-        run_cmd([CLANG] + flags + ['-c', f_ll, '-o', out])
+          run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", a_ll, "-o", b_ll, "-S"])
+          run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", b_ll, "-o", c_ll, "-S"])
+          run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", c_ll, "-o", f_ll, "-S"])
 
-        print(f"[aspis-cc] HARDENED {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
-        ''')
 
-    wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
-    with open(wrapper_path, 'w') as fp:
-        fp.write(wrapper_src)
-    os.chmod(wrapper_path, os.stat(wrapper_path).st_mode | stat.S_IEXEC)
 
-    conf.env.CC = [wrapper_path]
+
+
+          run_cmd([CLANG] + flags + ['-c', f_ll, '-o', out])
+
+          print(f"[aspis-cc] HARDENED {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
+          ''')
+
+      wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
+      with open(wrapper_path, 'w') as fp:
+          fp.write(wrapper_src)
+      os.chmod(wrapper_path, os.stat(wrapper_path).st_mode | stat.S_IEXEC)
+
+      conf.env.CC = [wrapper_path]
 
 build-type: option
 copyrights:
-- Copyright (C) 2020 Hesham Almatary <Hesham.Almatary@cl.cam.ac.uk>
-- Copyright (C) 2020 embedded brains GmbH & Co. KG
+  - Copyright (C) 2020 Hesham Almatary <Hesham.Almatary@cl.cam.ac.uk>
+  - Copyright (C) 2020 embedded brains GmbH & Co. KG
 default: []
-description: ''
+description: ""
 enabled-by:
-- clang
+  - clang
 links: []
 name: clang
 type: build
