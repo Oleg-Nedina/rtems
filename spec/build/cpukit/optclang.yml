@@ -98,7 +98,8 @@ actions:
           HARDEN_TARGETS = [
               "timespecisvalid.c",
               "aspis_sample_hardened/workload.c",
-              "threadstackallocate.c"
+              "threadstackallocate.c",
+              "score/src/chain.c"
           ]
 
           args = sys.argv[1:]
