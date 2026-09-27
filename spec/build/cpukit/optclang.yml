@@ -99,7 +99,15 @@ actions:
               "timespecisvalid.c",
               "aspis_sample_hardened/workload.c",
               "threadstackallocate.c",
-              "score/src/chain.c"
+              "timespecaddto.c",
+              "timespecdivide.c",
+              "timespecdividebyinteger.c",
+              "timespecfromticks.c",
+              "timespecgetasnanoseconds.c",
+              "timespecisnonnegative.c",
+              "timespeclessthan.c",
+              "timespecsubtract.c",
+              "timespectoticks.c"
           ]
 
           args = sys.argv[1:]
@@ -158,8 +166,8 @@ actions:
 
 
           # DEBUG IR
-
-          tmp = "/tmp/aspis_debug"
+          src_name = os.path.basename(src)
+          tmp = f"/tmp/aspis_debug/{src_name}"
           os.makedirs(tmp, exist_ok=True)
 
           a_ll, b_ll, c_ll = f"{tmp}/a.ll", f"{tmp}/b.ll", f"{tmp}/c.ll"
