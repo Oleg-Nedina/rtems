@@ -449,6 +449,8 @@ actions:
             "ioinitialize.c",
             "ioregisterdriver.c",
             "iounregisterdriver.c",
+            # Hardware Boot Boundary (1 file)
+            "bootcard.c",
         ]
 
         args = sys.argv[1:]
