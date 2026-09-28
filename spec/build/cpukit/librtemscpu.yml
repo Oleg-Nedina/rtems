@@ -1410,6 +1410,7 @@ source:
 - cpukit/score/src/apimutexisowner.c
 - cpukit/score/src/apimutexlock.c
 - cpukit/score/src/apimutexunlock.c
+- cpukit/score/src/aspishandlers.c
 - cpukit/score/src/chain.c
 - cpukit/score/src/chainnodecount.c
 - cpukit/score/src/condition.c
