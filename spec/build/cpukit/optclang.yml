@@ -95,7 +95,7 @@ actions:
         OPT = "/opt/rtems-llvm/rtems/bin/opt"
         PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
 
-        HARDEN_TARGETS = [
+        RASM_TARGETS = [
             # Famiglia timespec (10 file)
             "timespecisvalid.c",
             "timespecaddto.c",
@@ -368,6 +368,49 @@ actions:
             "smpunicastaction.c",
             "tlsallocsize.c",
         ]
+        EDDI_TARGETS = [
+            "timespecisvalid.c",
+            "aspis_sample_hardened/workload.c",
+            "threadstackallocate.c",
+            "timespecaddto.c",
+            "timespecdivide.c",
+            "timespecdividebyinteger.c",
+            "timespecfromticks.c",
+            "timespecgetasnanoseconds.c",
+            "timespecisnonnegative.c",
+            "timespeclessthan.c",
+            "timespecsubtract.c",
+            "timespectoticks.c",
+            "watchdogremove.c",
+            "watchdogtickssinceboot.c",
+            "watchdogtimeslicedefault.c",
+            "objectallocatenone.c",
+            "objectfreenothing.c",
+            "threadstackfree.c",
+            "configstackspacesize.c",
+            "threadentryadaptoridle.c",
+            "threadentryadaptornumeric.c",
+            "wkstringduplicate.c",
+            "log2table.c",
+            "threadidledefault.c",
+            "wkspaceisunifieddefault.c",
+            "stackallocator.c",
+            "stackallocatorfree.c",
+            "stackallocatorinit.c",
+            "stackallocatorforidle.c",
+            "stackallocatorforidlewkspace.c",
+            "wkspaceallocate.c",
+            "wkspacefree.c",
+            "wkspacemallocinitdefault.c",
+            "wkspacemallocinitunified.c",
+            "memoryzerofreeareas.c",
+            "memorydirtyfreeareas.c",
+            "heapnoextend.c",
+            "memoryzerobeforeuse.c",
+            "isrisinprogress.c",
+            "pheapallocate.c",
+            "pheapfree.c"
+        ]
 
         args = sys.argv[1:]
 
@@ -375,9 +418,10 @@ actions:
         src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
 
 
-        needs_hardening = any(target in src for target in HARDEN_TARGETS) if src else False
-        
-        if not needs_hardening:
+        is_eddi = any(target in src for target in EDDI_TARGETS) if src else False
+        is_rasm = any(target in src for target in RASM_TARGETS) if src else False
+
+        if not is_eddi and not is_rasm:
             os.execv(CLANG, [CLANG] + args)
 
 
@@ -431,16 +475,39 @@ actions:
         os.makedirs(tmp, exist_ok=True)
 
         a_ll = f"{tmp}/a.ll"
+        b_ll = f"{tmp}/b.ll"
+        c_ll = f"{tmp}/c.ll"
         d_ll = f"{tmp}/d.ll"
         e_ll = f"{tmp}/e.ll"
+        f_ll = f"{tmp}/f.ll"
 
-
+        # 1. Emissione LLVM IR grezzo
         run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
-        run_cmd([OPT, "-passes=simplifycfg,lower-switch", a_ll, "-o", d_ll, "-S"])
-        run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", d_ll, "-o", e_ll, "-S"])
-        run_cmd([CLANG] + flags + ['-c', e_ll, '-o', out])
 
-        print(f"[aspis-cc] HARDENED {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
+        current_ll = a_ll
+
+        # 2. Pipeline EDDI iniziale: trasformazione ritorni e analisi/duplicazione memoria
+        if is_eddi:
+            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", current_ll, "-o", b_ll, "-S"])
+            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", b_ll, "-o", c_ll, "-S"])
+            current_ll = c_ll
+
+        # 3. Pipeline RASM: normalizzazione switch e firme di controllo del flusso
+        if is_rasm:
+            run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", d_ll, "-S"])
+            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", d_ll, "-o", e_ll, "-S"])
+            current_ll = e_ll
+
+        # 4. Pipeline EDDI finale: duplicazione simboli globali
+        if is_eddi:
+            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", current_ll, "-o", f_ll, "-S"])
+            current_ll = f_ll
+
+        # 5. Generazione codice macchina ELF
+        run_cmd([CLANG] + flags + ['-c', current_ll, '-o', out])
+
+        mode = "EDDI+RASM" if (is_eddi and is_rasm) else ("EDDI" if is_eddi else "RASM")
+        print(f"[aspis-cc] HARDENED [{mode}] {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
         ''')
 
     wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
