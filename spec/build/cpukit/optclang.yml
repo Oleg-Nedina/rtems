@@ -131,7 +131,12 @@ actions:
               "wkspacemallocinitdefault.c",
               "wkspacemallocinitunified.c",
               "memoryzerofreeareas.c",
-              "memorydirtyfreeareas.c"
+              "memorydirtyfreeareas.c",
+              "heapnoextend.c",
+              "memoryzerobeforeuse.c",
+              "isrisinprogress.c",
+              "pheapallocate.c",
+              "pheapfree.c"
           ]
 
           args = sys.argv[1:]
