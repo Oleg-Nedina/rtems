@@ -107,7 +107,31 @@ actions:
               "timespecisnonnegative.c",
               "timespeclessthan.c",
               "timespecsubtract.c",
-              "timespectoticks.c"
+              "timespectoticks.c",
+              "watchdogremove.c",
+              "watchdogtickssinceboot.c",
+              "watchdogtimeslicedefault.c",
+              "objectallocatenone.c",
+              "objectfreenothing.c",
+              "threadstackfree.c",
+              "configstackspacesize.c",
+              "threadentryadaptoridle.c",
+              "threadentryadaptornumeric.c",
+              "wkstringduplicate.c",
+              "log2table.c",
+              "threadidledefault.c",
+              "wkspaceisunifieddefault.c",
+              "stackallocator.c",
+              "stackallocatorfree.c",
+              "stackallocatorinit.c",
+              "stackallocatorforidle.c",
+              "stackallocatorforidlewkspace.c",
+              "wkspaceallocate.c",
+              "wkspacefree.c",
+              "wkspacemallocinitdefault.c",
+              "wkspacemallocinitunified.c",
+              "memoryzerofreeareas.c",
+              "memorydirtyfreeareas.c"
           ]
 
           args = sys.argv[1:]
