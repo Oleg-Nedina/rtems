@@ -367,6 +367,17 @@ actions:
             "smpsynchronize.c",
             "smpunicastaction.c",
             "tlsallocsize.c",
+            # Classic API - Gruppo Pilota (10 file)
+            "taskcreate.c",
+            "taskstart.c",
+            "taskdelete.c",
+            "tasksuspend.c",
+            "taskresume.c",
+            "semcreate.c",
+            "semobtain.c",
+            "semrelease.c",
+            "eventsend.c",
+            "eventreceive.c",
         ]
 
         args = sys.argv[1:]
