@@ -136,7 +136,31 @@ actions:
               "memoryzerobeforeuse.c",
               "isrisinprogress.c",
               "pheapallocate.c",
-              "pheapfree.c"
+              "pheapfree.c",
+              "pheapextend.c",
+              "pheapgetinfo.c",
+              "pheapgetfreeinfo.c",
+              "pheapwalk.c",
+              "allocatormutex.c",
+              "apimutexlock.c",
+              "apimutexunlock.c",
+              "coresem.c",
+              "corerwlock.c",
+              "libatomic.c",
+              "coretod.c",
+              "once.c",
+              "threadexhausttimeslice.c",
+              "schedulerdefaultschedule.c",
+              "schedulerdefaultreleasejob.c",
+              "schedulerdefaultnodedestroy.c",
+              "smplock.c",
+              "smpbarrierwait.c",
+              "objectnamespaceremove.c",
+              "coretodhookdata.c",
+              "coretodhookrun.c",
+              "interr.c",
+              "memorynoinit.c",
+              "wkspace.c"
           ]
 
           args = sys.argv[1:]
@@ -145,7 +169,8 @@ actions:
           src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
 
 
-          needs_hardening = any(target in src for target in HARDEN_TARGETS) if src else False
+          src_base = os.path.basename(src) if src else ""
+          needs_hardening = any(src.endswith('/' + target) or src == target or src_base == target for target in HARDEN_TARGETS) if src else False
           
           if not needs_hardening:
               os.execv(CLANG, [CLANG] + args)
