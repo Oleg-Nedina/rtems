@@ -40,13 +40,22 @@
 
 #include <rtems/score/armv7m.h>
 #include <rtems/score/percpu.h>
+#include <rtems/score/threaddispatch.h>
 
 #ifdef ARM_MULTILIB_ARCH_V7M
+
+void _Thread_Dispatch_dup( void );
+
+void __attribute__((weak)) _Thread_Dispatch_dup( void )
+{
+  _Thread_Dispatch();
+}
+
 
 static void __attribute__((naked)) _ARMV7M_Thread_dispatch( void )
 {
   __asm__ volatile (
-    "bl _Thread_Dispatch\n"
+    "bl _Thread_Dispatch_dup\n"
     /* FIXME: SVC, binutils bug */
     ".short 0xdf00\n"
     "nop\n"
