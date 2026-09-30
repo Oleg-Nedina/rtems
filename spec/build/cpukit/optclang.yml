@@ -111,6 +111,8 @@ actions:
               "watchdogremove.c",
               "watchdogtickssinceboot.c",
               "watchdogtimeslicedefault.c",
+              "watchdoginsert.c",
+              "watchdogtick.c",
               "objectallocatenone.c",
               "objectfreenothing.c",
               "threadstackfree.c",
