@@ -160,7 +160,32 @@ actions:
               "coretodhookrun.c",
               "interr.c",
               "memorynoinit.c",
-              "wkspace.c"
+              "wkspace.c",
+              "chainnodecount.c",
+              "coremsgflushwait.c",
+              "debugisthreaddispatchingallowed.c",
+              "debugunreachable.c",
+              "isrvectortable.c",
+              "iterateoverthreads.c",
+              "objectgetinfoid.c",
+              "percpuasm.c",
+              "percpudata.c",
+              "profilingisrentryexit.c",
+              "profilingsmplock.c",
+              "rbtreeappend.c",
+              "rbtreeiterate.c",
+              "rbtreemax.c",
+              "rbtreemin.c",
+              "rbtreenext.c",
+              "rbtreepostorder.c",
+              "rbtreeprepend.c",
+              "rbtreeprev.c",
+              "schedulercbssetparameters.c",
+              "schedulerdefaultmakecleansticky.c",
+              "schedulerdefaultpinunpin.c",
+              "schedulerdefaultpinunpindonothing.c",
+              "threadgetcputimeusedafterreset.c",
+              "threadscheduler.c"
           ]
 
           args = sys.argv[1:]
