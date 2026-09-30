@@ -299,6 +299,8 @@ void test_convert()
 
 #define CONFIGURE_RTEMS_INIT_TASKS_TABLE
 
+#define CONFIGURE_UNIFIED_WORK_AREAS
+
 #define CONFIGURE_INIT
 
 #include <rtems/confdefs.h>
