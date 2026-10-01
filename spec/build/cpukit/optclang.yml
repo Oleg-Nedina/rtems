@@ -211,7 +211,24 @@ actions:
               "threadqgetnameandid.c",
               "threadqtimeout.c",
               "threadwaitgetid.c",
-              "tlsallocsize.c"
+              "tlsallocsize.c",
+              # Sbloccati post-patch FIX-04 (16 file nuovi)
+              "coremsgbroadcast.c",
+              "objectnametoid.c",
+              "objectsetname.c",
+              "schedulercbsattachthread.c",
+              "schedulercbscreateserver.c",
+              "schedulercbsdetachthread.c",
+              "schedulercbsgetapprovedbudget.c",
+              "schedulercbsgetexecutiontime.c",
+              "schedulercbsgetparameters.c",
+              "schedulercbsgetremainingbudget.c",
+              "schedulercbsgetserverid.c",
+              "schedulerdefaultsetaffinity.c",
+              "scheduleredfreleasejob.c",
+              "schedulergetaffinity.c",
+              "schedulersetaffinity.c",
+              "threadname.c"
           ]
 
           args = sys.argv[1:]
