@@ -228,7 +228,28 @@ actions:
               "scheduleredfreleasejob.c",
               "schedulergetaffinity.c",
               "schedulersetaffinity.c",
-              "threadname.c"
+              "threadname.c",
+              # Sbloccati post-patch FIX-05 (20 file nuovi)
+              "objectgetnameasstring.c",
+              "objectidtoname.c",
+              "percpu.c",
+              "schedulercbs.c",
+              "schedulercbsunblock.c",
+              "scheduleredfblock.c",
+              "scheduleredfchangepriority.c",
+              "scheduleredfschedule.c",
+              "scheduleredfunblock.c",
+              "scheduleredfyield.c",
+              "schedulerpriorityschedule.c",
+              "schedulersimpleschedule.c",
+              "threadget.c",
+              "threadgetcputimeused.c",
+              "threadhandler.c",
+              "threadplaindispatch.c",
+              "threadqextract.c",
+              "threadselfid.c",
+              "threadstart.c",
+              "threadtimeout.c"
           ]
 
           args = sys.argv[1:]
