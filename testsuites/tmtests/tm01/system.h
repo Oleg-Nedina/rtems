@@ -50,6 +50,8 @@ rtems_id   Task_id[ OPERATION_COUNT + 1 ];   /* array of task ids */
 
 #define CONFIGURE_RTEMS_INIT_TASKS_TABLE
 
+#define CONFIGURE_UNIFIED_WORK_AREAS
+
 #include <rtems/confdefs.h>
 
 /* end of include file */
