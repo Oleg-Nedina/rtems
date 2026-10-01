@@ -65,6 +65,8 @@ extern rtems_name Task_name[ 4 ]; /* array of task names */
 
 #define CONFIGURE_INITIAL_EXTENSIONS RTEMS_TEST_INITIAL_EXTENSION
 
+#define CONFIGURE_UNIFIED_WORK_AREAS
+
 #include <rtems/confdefs.h>
 
 /*
