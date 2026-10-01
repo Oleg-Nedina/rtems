@@ -468,6 +468,8 @@ actions:
             "watchdogremove.c",
             "watchdogtickssinceboot.c",
             "watchdogtimeslicedefault.c",
+            "watchdoginsert.c",
+            "watchdogtick.c",
             "objectallocatenone.c",
             "objectfreenothing.c",
             "threadstackfree.c",
@@ -542,7 +544,31 @@ actions:
             "schedulerdefaultpinunpin.c",
             "schedulerdefaultpinunpindonothing.c",
             "threadgetcputimeusedafterreset.c",
-            "threadscheduler.c"
+            "threadscheduler.c",
+            # Sbloccati post-patch FIX-02 (23 file nuovi)
+            "corebarrierwait.c",
+            "objectallocate.c",
+            "objectclose.c",
+            "objectgetinfo.c",
+            "objectgetlocal.c",
+            "objectgetnext.c",
+            "objectnametoidstring.c",
+            "scheduler.c",
+            "schedulercbscleanup.c",
+            "schedulercbsdestroyserver.c",
+            "schedulercbsnodeinit.c",
+            "schedulercbsreleasejob.c",
+            "scheduleredf.c",
+            "scheduleredfnodeinit.c",
+            "thread.c",
+            "threaditerate.c",
+            "threadloadenv.c",
+            "threadq.c",
+            "threadqfirst.c",
+            "threadqgetnameandid.c",
+            "threadqtimeout.c",
+            "threadwaitgetid.c",
+            "tlsallocsize.c"
         ]
 
         args = sys.argv[1:]
