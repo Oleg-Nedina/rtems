@@ -128,7 +128,7 @@ static inline void _Thread_Dispatch_initialization( void )
  *
  * On entry the thread dispatch level must be equal to zero.
  */
-void _Thread_Dispatch( void );
+void _Thread_Dispatch( void ) __attribute__((annotate("exclude")));
 
 /**
  * @brief Directly do a thread dispatch.
@@ -142,7 +142,7 @@ void _Thread_Dispatch( void );
  *
  * @see _Thread_Dispatch().
  */
-void _Thread_Dispatch_direct( Per_CPU_Control *cpu_self );
+void _Thread_Dispatch_direct( Per_CPU_Control *cpu_self ) __attribute__((annotate("exclude")));
 
 /**
  * @brief Directly do a thread dispatch and do not return.
@@ -153,7 +153,7 @@ void _Thread_Dispatch_direct( Per_CPU_Control *cpu_self );
  */
 RTEMS_NO_RETURN void _Thread_Dispatch_direct_no_return(
   Per_CPU_Control *cpu_self
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief Performs a thread dispatch on the current processor.
@@ -168,7 +168,7 @@ RTEMS_NO_RETURN void _Thread_Dispatch_direct_no_return(
  *
  * @see _Thread_Dispatch().
  */
-void _Thread_Do_dispatch( Per_CPU_Control *cpu_self, ISR_Level level );
+void _Thread_Do_dispatch( Per_CPU_Control *cpu_self, ISR_Level level ) __attribute__((annotate("exclude")));
 
 /**
  * @brief Disables thread dispatching inside a critical section (interrupts
@@ -245,7 +245,7 @@ static inline Per_CPU_Control *_Thread_Dispatch_disable( void )
  *
  * @param[in, out] cpu_self The current processor.
  */
-void _Thread_Dispatch_enable( Per_CPU_Control *cpu_self );
+void _Thread_Dispatch_enable( Per_CPU_Control *cpu_self ) __attribute__((annotate("exclude")));
 
 /**
  * @brief Unnests thread dispatching.
