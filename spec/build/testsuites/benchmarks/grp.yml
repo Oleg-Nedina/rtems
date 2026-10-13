@@ -20,6 +20,18 @@ links:
   uid: linpack
 - role: build-dependency
   uid: whetstone
+- role: build-dependency
+  uid: bench_acas
+- role: build-dependency
+  uid: bench_ann
+- role: build-dependency
+  uid: bench_canny
+- role: build-dependency
+  uid: bench_img_scaling
+- role: build-dependency
+  uid: bench_jpeg
+- role: build-dependency
+  uid: bench_latnav
 type: build
 use-after:
 - rtemstest
