@@ -340,6 +340,7 @@ void _Thread_Yield( Thread_Control *executing );
  *
  * @return Returns the thread life state before the changes.
  */
+__attribute__((annotate("exclude")))
 Thread_Life_state _Thread_Change_life(
   Thread_Life_state life_states_to_clear,
   Thread_Life_state life_states_to_set,
@@ -356,6 +357,7 @@ Thread_Life_state _Thread_Change_life(
  *
  * @return The previous state the thread was in.
  */
+__attribute__((annotate("exclude")))
 Thread_Life_state _Thread_Set_life_protection( Thread_Life_state state );
 
 /**

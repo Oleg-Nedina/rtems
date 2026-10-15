@@ -189,6 +189,7 @@ void _Thread_Kill_zombies( void )
   _ISR_lock_Release_and_ISR_enable( &zombies->Lock, &lock_context );
 }
 
+__attribute__((annotate("exclude")))
 static Thread_Life_state _Thread_Change_life_locked(
   Thread_Control   *the_thread,
   Thread_Life_state life_states_to_clear,
