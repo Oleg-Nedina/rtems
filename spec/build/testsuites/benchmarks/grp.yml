@@ -36,6 +36,8 @@ links:
   uid: bench_all_seq
 - role: build-dependency
   uid: bench_all_concurrent
+- role: build-dependency
+  uid: bench_eddi_stress
 type: build
 use-after:
 - rtemstest
