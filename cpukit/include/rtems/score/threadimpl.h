@@ -133,6 +133,7 @@ void _Thread_Iterate( Thread_Visitor visitor, void *arg );
  *
  * @param[out] information Information to initialize.
  */
+__attribute__((annotate("exclude")))
 void _Thread_Initialize_information( Thread_Information *information );
 
 /**
@@ -140,6 +141,7 @@ void _Thread_Initialize_information( Thread_Information *information );
  *
  * This routine performs the initialization necessary for this handler.
  */
+__attribute__((annotate("exclude")))
 void _Thread_Handler_initialization( void );
 
 /**
@@ -238,6 +240,7 @@ typedef struct {
  *
  * @retval STATUS_UNSATISFIED The thread initialization failed.
  */
+__attribute__((annotate("exclude")))
 Status_Control _Thread_Initialize(
   Thread_Information         *information,
   Thread_Control             *the_thread,
@@ -292,6 +295,7 @@ void _Thread_Free(
  *
  * @retval STATUS_INCORRECT_STATE The thread was already started.
  */
+__attribute__((annotate("exclude")))
 Status_Control _Thread_Start(
   Thread_Control                 *the_thread,
   const Thread_Entry_information *entry,
@@ -311,6 +315,7 @@ Status_Control _Thread_Start(
  *
  * @retval STATUS_INCORRECT_STATE The thread was dormant.
  */
+__attribute__((annotate("exclude")))
 Status_Control _Thread_Restart(
   Thread_Control                 *the_thread,
   const Thread_Entry_information *entry,
@@ -451,6 +456,7 @@ Thread_Cancel_state _Thread_Cancel(
  *
  * @retval STATUS_DEADLOCK A deadlock occurred.
  */
+__attribute__((annotate("exclude")))
 Status_Control _Thread_Close(
   Thread_Control       *the_thread,
   Thread_Control       *executing,
@@ -967,7 +973,7 @@ static inline Thread_Information *_Thread_Get_objects_information(
  * @param id The id of the thread.
  * @param lock_context The lock context.
  */
-Thread_Control *_Thread_Get( Objects_Id id, ISR_lock_Context *lock_context );
+Thread_Control *_Thread_Get( Objects_Id id, ISR_lock_Context *lock_context ) __attribute__((annotate("exclude")));
 
 /**
  * @brief Gets the identifier of the calling thread.

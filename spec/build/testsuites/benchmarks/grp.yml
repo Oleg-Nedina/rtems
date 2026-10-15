@@ -32,6 +32,10 @@ links:
   uid: bench_jpeg
 - role: build-dependency
   uid: bench_latnav
+- role: build-dependency
+  uid: bench_all_seq
+- role: build-dependency
+  uid: bench_all_concurrent
 type: build
 use-after:
 - rtemstest

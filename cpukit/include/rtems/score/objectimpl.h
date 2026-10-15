@@ -113,6 +113,7 @@ extern Objects_Information
  * @retval 0 The extend operation failed.
  * @retval block The block index of the new objects block.
  */
+__attribute__((annotate("exclude")))
 Objects_Maximum _Objects_Extend_information(
   Objects_Information *information
 );
@@ -138,6 +139,7 @@ void _Objects_Free_objects_block(
  *
  * @param information Points to an object class information block.
  */
+__attribute__((annotate("exclude")))
 void _Objects_Shrink_information( Objects_Information *information );
 
 /**
@@ -148,6 +150,7 @@ void _Objects_Shrink_information( Objects_Information *information );
  *
  * @param information The object information to be initialized.
  */
+__attribute__((annotate("exclude")))
 void _Objects_Initialize_information( Objects_Information *information );
 
 /**
@@ -202,6 +205,7 @@ unsigned int _Objects_API_maximum_class( uint32_t api );
  *
  * @see _Objects_Free().
  */
+__attribute__((annotate("exclude")))
 Objects_Control *_Objects_Allocate( Objects_Information *information );
 
 /**
@@ -299,7 +303,7 @@ Objects_Control *_Objects_Get(
   Objects_Id                 id,
   ISR_lock_Context          *lock_context,
   const Objects_Information *information
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief  Maps object ids to object control blocks.
@@ -621,6 +625,7 @@ static inline Objects_Maximum _Objects_Get_maximum_index(
  * @retval NULL No inactive object is available.
  * @retval object An inactive object.
  */
+__attribute__((annotate("exclude")))
 static inline Objects_Control *_Objects_Get_inactive(
   Objects_Information *information
 )
@@ -658,6 +663,7 @@ static inline Objects_Maximum _Objects_Is_auto_extend(
  *       or delete/destroy operations.
  */
 
+__attribute__((annotate("exclude")))
 static inline void _Objects_Set_local_object(
   const Objects_Information *information,
   uint32_t                   index,
@@ -718,6 +724,7 @@ static inline void _Objects_Invalidate_Id(
  *
  * @return Returns the identifier of the object which is now valid.
  */
+__attribute__((annotate("exclude")))
 static inline Objects_Id _Objects_Open_u32(
   const Objects_Information *information,
   Objects_Control           *the_object,
@@ -825,6 +832,7 @@ static inline bool _Objects_Allocator_is_owner( void )
  *
  * @see _Objects_Allocate() and _Objects_Free().
  */
+__attribute__((annotate("exclude")))
 static inline Objects_Control *_Objects_Allocate_unprotected(
   Objects_Information *information
 )
@@ -881,6 +889,7 @@ static inline Objects_Control *_Objects_Allocate_unprotected(
  * }
  * @endcode
  */
+__attribute__((annotate("exclude")))
 static inline void _Objects_Free(
   Objects_Information *information,
   Objects_Control     *the_object

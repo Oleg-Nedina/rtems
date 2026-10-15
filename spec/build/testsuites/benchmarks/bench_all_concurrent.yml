@@ -1,0 +1,32 @@
+SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
+build-type: test-program
+cflags:
+- -DCLASS_A
+copyrights:
+- Copyright (C) 2025
+cppflags: []
+cxxflags:
+- -DCLASS_A
+enabled-by: true
+features: c cxx cprogram
+includes:
+- testsuites/benchmarks/include
+- testsuites/support/include
+ldflags: []
+links: []
+source:
+- testsuites/benchmarks/all_concurrent/init.c
+- testsuites/benchmarks/acas/acas.c
+- testsuites/benchmarks/ann/ann.c
+- testsuites/benchmarks/canny/canny.c
+- testsuites/benchmarks/img_scaling/img_scaling.c
+- testsuites/benchmarks/latnav/latnav.c
+- testsuites/benchmarks/jpeg/jpeg_compress.cpp
+- testsuites/benchmarks/common/crc.c
+- testsuites/benchmarks/common/simple_random.c
+stlib:
+- m
+target: testsuites/benchmarks/bench_all_concurrent.exe
+type: build
+use-after: []
+use-before: []

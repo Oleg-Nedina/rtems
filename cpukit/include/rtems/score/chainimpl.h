@@ -102,6 +102,7 @@ extern "C" {
  *  @param number_nodes The number of nodes that will be in the chain.
  *  @param node_size The size of each node.
  */
+__attribute__((annotate("exclude")))
 void _Chain_Initialize(
   Chain_Control *the_chain,
   void          *starting_address,

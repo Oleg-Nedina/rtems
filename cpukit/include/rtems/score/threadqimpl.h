@@ -954,7 +954,7 @@ void _Thread_queue_Enqueue(
   const Thread_queue_Operations *operations,
   Thread_Control                *the_thread,
   Thread_queue_Context          *queue_context
-);
+) __attribute__((annotate("exclude")));
 
 #if defined( RTEMS_SMP )
 /**
@@ -1031,7 +1031,7 @@ void _Thread_queue_Resume(
   Thread_queue_Queue   *queue,
   Thread_Control       *the_thread,
   Thread_queue_Context *queue_context
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief Extracts thread from thread queue.
@@ -1066,7 +1066,7 @@ void _Thread_queue_Surrender(
   Thread_Control                *previous_owner,
   Thread_queue_Context          *queue_context,
   const Thread_queue_Operations *operations
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief Surrenders the thread queue previously owned by the thread to the
@@ -1087,7 +1087,7 @@ void _Thread_queue_Surrender_no_priority(
   Thread_queue_Heads            *heads,
   Thread_queue_Context          *queue_context,
   const Thread_queue_Operations *operations
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief Surrenders the thread queue previously owned by the thread to the
