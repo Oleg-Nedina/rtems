@@ -1,460 +1,467 @@
 SPDX-License-Identifier: CC-BY-SA-4.0 OR BSD-2-Clause
 actions:
-- set-value: clang
-- find-program: null
-- env-assign: AS
-- env-assign: CC
-- set-value: clang++
-- find-program: null
-- env-assign: CXX
-- set-value: llvm-ar
-- substitute: null
-- find-program: null
-- env-assign: AR
-- set-value: clang
-- env-assign: AS
-- env-assign: ASM_NAME
-- set-value:
-  - -c
-  - -o
-- env-assign: AS_TGT_F
-- set-value:
-  - -o
-- env-assign: ASLNK_TGT_F
-- set-value:
-  - --target=${ARCH}-rtems${__RTEMS_MAJOR__}
-  - --sysroot=${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}
-  - --gcc-toolchain=${PREFIX}
-  - -Qunused-arguments
-  - -isystem
-  - ${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}/include
-- substitute: null
-- env-append: ABI_FLAGS
-- script: |
-    import os
-    import stat
-    import textwrap
+  - set-value: clang
+  - find-program: null
+  - env-assign: AS
+  - env-assign: CC
+  - set-value: clang++
+  - find-program: null
+  - env-assign: CXX
+  - set-value: llvm-ar
+  - substitute: null
+  - find-program: null
+  - env-assign: AR
+  - set-value: clang
+  - env-assign: AS
+  - env-assign: ASM_NAME
+  - set-value:
+      - -c
+      - -o
+  - env-assign: AS_TGT_F
+  - set-value:
+      - -o
+  - env-assign: ASLNK_TGT_F
+  - set-value:
+      - --target=${ARCH}-rtems${__RTEMS_MAJOR__}
+      - --sysroot=${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}
+      - --gcc-toolchain=${PREFIX}
+      - -Qunused-arguments
+      - -isystem
+      - ${PREFIX}/${ARCH}-rtems${__RTEMS_MAJOR__}/include
+  - substitute: null
+  - env-append: ABI_FLAGS
+  - script: |
+      import os
+      import stat
+      import textwrap
 
-    conf.load("ar asm clang clang++ gccdeps")
+      conf.load("ar asm clang clang++ gccdeps")
 
-    arch = conf.env['ARCH']
-    arch = arch[0] if isinstance(arch, list) else arch
-    major = conf.env['__RTEMS_MAJOR__']
-    major = major[0] if isinstance(major, list) else major
-    triple = f"{arch}-rtems{major}"
-    gxx = f"{triple}-g++"
-    gcc = f"{triple}-gcc"
+      arch = conf.env['ARCH']
+      arch = arch[0] if isinstance(arch, list) else arch
+      major = conf.env['__RTEMS_MAJOR__']
+      major = major[0] if isinstance(major, list) else major
+      triple = f"{arch}-rtems{major}"
+      gxx = f"{triple}-g++"
+      gcc = f"{triple}-gcc"
 
-    clang_res = conf.cmd_and_log(conf.env.CC + ['--print-resource-dir']).strip()
-    conf.env.append_value('CFLAGS', ['-isystem', f"{clang_res}/include"])
-    conf.env.append_value('CXXFLAGS', ['-isystem', f"{clang_res}/include"])
+      clang_res = conf.cmd_and_log(conf.env.CC + ['--print-resource-dir']).strip()
+      conf.env.append_value('CFLAGS', ['-isystem', f"{clang_res}/include"])
+      conf.env.append_value('CXXFLAGS', ['-isystem', f"{clang_res}/include"])
 
-    libstdcxx = conf.cmd_and_log([gxx, '-print-file-name=include/c++']).strip()
-    for d in (libstdcxx,
-              os.path.join(libstdcxx, triple),
-              os.path.join(libstdcxx, 'backward')):
-        if os.path.isdir(d):
-            conf.env.append_value('CXXFLAGS', ['-isystem', d])
+      libstdcxx = conf.cmd_and_log([gxx, '-print-file-name=include/c++']).strip()
+      for d in (libstdcxx,
+                os.path.join(libstdcxx, triple),
+                os.path.join(libstdcxx, 'backward')):
+          if os.path.isdir(d):
+              conf.env.append_value('CXXFLAGS', ['-isystem', d])
 
-    clang_only_prefixes = ('--target', '--gcc-toolchain', '--sysroot', '-Qunused-arguments')
+      clang_only_prefixes = ('--target', '--gcc-toolchain', '--sysroot', '-Qunused-arguments')
 
-    compile_only, gcc_safe, skip = [], [], False
-    for f in conf.env.ABI_FLAGS:
-        if skip:
-            compile_only.append(f)
-            skip = False
-            continue
-        if f == '-isystem':
-            compile_only.append(f)
-            skip = True
-            continue
-        if f.startswith(clang_only_prefixes):
-            compile_only.append(f)
-        else:
-            gcc_safe.append(f)
+      compile_only, gcc_safe, skip = [], [], False
+      for f in conf.env.ABI_FLAGS:
+          if skip:
+              compile_only.append(f)
+              skip = False
+              continue
+          if f == '-isystem':
+              compile_only.append(f)
+              skip = True
+              continue
+          if f.startswith(clang_only_prefixes):
+              compile_only.append(f)
+          else:
+              gcc_safe.append(f)
 
-    conf.env.ABI_FLAGS = gcc_safe
-    conf.env.append_value('CFLAGS', compile_only)
-    conf.env.append_value('CXXFLAGS', compile_only)
-    conf.env.append_value('ASFLAGS', compile_only)
+      conf.env.ABI_FLAGS = gcc_safe
+      conf.env.append_value('CFLAGS', compile_only)
+      conf.env.append_value('CXXFLAGS', compile_only)
+      conf.env.append_value('ASFLAGS', compile_only)
 
-    conf.env.LINK_CC = [gcc]
-    conf.env.LINK_CXX = [gxx]
-    conf.env.append_value('LINKFLAGS', ['-qrtems'])
+      conf.env.LINK_CC = [gcc]
+      conf.env.LINK_CXX = [gxx]
+      conf.env.append_value('LINKFLAGS', ['-qrtems'])
 
+      wrapper_src = textwrap.dedent('''\
+          #!/usr/bin/env python3
+          import sys
+          import os
+          import shutil
+          import subprocess
 
-    # Generate the aspis-cc wrapper (PYTHON VERSION + DEBUG IR)
+          CLANG = "/opt/rtems-llvm/rtems/bin/clang"
+          OPT = "/opt/rtems-llvm/rtems/bin/opt"
+          PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
 
-    wrapper_src = textwrap.dedent('''\
-        #!/usr/bin/env python3
-        import sys
-        import os
-        import subprocess
-
-        CLANG = "/opt/rtems-llvm/rtems/bin/clang"
-        OPT = "/opt/rtems-llvm/rtems/bin/opt"
-        PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
-
-        RASM_TARGETS = [
-            # Famiglia timespec (10 file)
-            "timespecisvalid.c",
-            "timespecaddto.c",
-            "timespecdivide.c",
-            "timespecdividebyinteger.c",
-            "timespecfromticks.c",
-            "timespecgetasnanoseconds.c",
-            "timespecisnonnegative.c",
-            "timespeclessthan.c",
-            "timespecsubtract.c",
-            "timespectoticks.c",
-            # Famiglia chain (2 file)
-            "chain.c",
-            "chainnodecount.c",
-            # Famiglia rbtree (11 file)
-            "rbtreeappend.c",
-            "rbtreeextract.c",
-            "rbtreeinsert.c",
-            "rbtreeiterate.c",
-            "rbtreemax.c",
-            "rbtreemin.c",
-            "rbtreenext.c",
-            "rbtreepostorder.c",
-            "rbtreeprepend.c",
-            "rbtreeprev.c",
-            "rbtreereplace.c",
-            # Sample workload
-            "aspis_sample_hardened/workload.c",
-            # Famiglia watchdog (5 file)
-            "watchdoginsert.c",
-            "watchdogremove.c",
-            "watchdogtick.c",
-            "watchdogtickssinceboot.c",
-            "watchdogtimeslicedefault.c",
-            # Moduli core scheduler (4 file)
-            "scheduler.c",
-            "schedulerpriority.c",
-            "schedulersimple.c",
-            "schedulerdefaultschedule.c",
-            # Famiglia object (24 file)
-            "objectactivecount.c",
-            "objectallocate.c",
-            "objectallocatenone.c",
-            "objectallocatestatic.c",
-            "objectallocateunlimited.c",
-            "objectapimaximumclass.c",
-            "objectclose.c",
-            "objectextendinformation.c",
-            "objectfree.c",
-            "objectfreenothing.c",
-            "objectfreestatic.c",
-            "objectgetinfo.c",
-            "objectgetinfoid.c",
-            "objectgetlocal.c",
-            "objectgetnameasstring.c",
-            "objectgetnext.c",
-            "objectgetnoprotection.c",
-            "objectidtoname.c",
-            "objectinitializeinformation.c",
-            "objectnamespaceremove.c",
-            "objectnametoid.c",
-            "objectnametoidstring.c",
-            "objectsetname.c",
-            "objectshrinkinformation.c",
-            # Famiglia core primitive di sincronizzazione (24 file)
-            "corebarrier.c",
-            "corebarrierwait.c",
-            "coremsg.c",
-            "coremsgbroadcast.c",
-            "coremsgclose.c",
-            "coremsgflush.c",
-            "coremsgflushwait.c",
-            "coremsginsert.c",
-            "coremsgseize.c",
-            "coremsgsubmit.c",
-            "coremsgwkspace.c",
-            "coremutexseize.c",
-            "corerwlock.c",
-            "corerwlockobtainread.c",
-            "corerwlockobtainwrite.c",
-            "corerwlockrelease.c",
-            "coresem.c",
-            "coretod.c",
-            "coretodcheck.c",
-            "coretodhookdata.c",
-            "coretodhookregister.c",
-            "coretodhookrun.c",
-            "coretodhookunregister.c",
-            "coretodset.c",
-            # Gestione della memoria dinamica (19 file)
-            "heap.c",
-            "heapallocate.c",
-            "heapextend.c",
-            "heapfree.c",
-            "heapgetfreeinfo.c",
-            "heapgetinfo.c",
-            "heapgreedy.c",
-            "heapiterate.c",
-            "heapnoextend.c",
-            "heapresizeblock.c",
-            "heapsizeofuserarea.c",
-            "heapwalk.c",
-            "pheapallocate.c",
-            "pheapextend.c",
-            "pheapfree.c",
-            "pheapgetfreeinfo.c",
-            "pheapgetinfo.c",
-            "pheapgetsize.c",
-            "pheapwalk.c",
-            # Sottosistema memoria, stack e workspace (18 file)
-            "memoryallocate.c",
-            "memorydirtyfreeareas.c",
-            "memoryfill.c",
-            "memorynoinit.c",
-            "memoryzerobeforeuse.c",
-            "memoryzerofreeareas.c",
-            "stackallocator.c",
-            "stackallocatorforidle.c",
-            "stackallocatorforidlewkspace.c",
-            "stackallocatorfree.c",
-            "stackallocatorinit.c",
-            "wkspace.c",
-            "wkspaceallocate.c",
-            "wkspacefree.c",
-            "wkspaceisunifieddefault.c",
-            "wkspacemallocinitdefault.c",
-            "wkspacemallocinitunified.c",
-            "wkstringduplicate.c",
-            # Sottosistema thread management (43 file)
-            "thread.c",
-            "threadallocateunlimited.c",
-            "threadchangepriority.c",
-            "threadclearstate.c",
-            "threadcreateidle.c",
-            "threaddispatch.c",
-            "threadentryadaptoridle.c",
-            "threadentryadaptornumeric.c",
-            "threadentryadaptorpointer.c",
-            "threadexhausttimeslice.c",
-            "threadget.c",
-            "threadgetcputimeused.c",
-            "threadgetcputimeusedafterreset.c",
-            "threadhandler.c",
-            "threadidledefault.c",
-            "threadinitialize.c",
-            "threaditerate.c",
-            "threadloadenv.c",
-            "threadmp.c",
-            "threadname.c",
-            "threadplaindispatch.c",
-            "threadq.c",
-            "threadqenqueue.c",
-            "threadqextract.c",
-            "threadqextractwithproxy.c",
-            "threadqfirst.c",
-            "threadqflush.c",
-            "threadqgetnameandid.c",
-            "threadqops.c",
-            "threadqtimeout.c",
-            "threadresettimeslice.c",
-            "threadrestart.c",
-            "threadscheduler.c",
-            "threadselfid.c",
-            "threadsetstate.c",
-            "threadstackallocate.c",
-            "threadstackfree.c",
-            "threadstart.c",
-            "threadstartmultitasking.c",
-            "threadtimeout.c",
-            "threadunpin.c",
-            "threadwaitgetid.c",
-            "threadyield.c",
-            # Sincronizzazione primitiva, lock ed estensioni utente (15 file)
-            "userext.c",
-            "userextaddset.c",
-            "userextiterate.c",
-            "userextremoveset.c",
-            "mutex.c",
-            "semaphore.c",
-            "futex.c",
-            "condition.c",
-            "allocatormutex.c",
-            "apimutexisowner.c",
-            "apimutexlock.c",
-            "apimutexunlock.c",
-            "once.c",
-            "freechain.c",
-            "hash.c",
-            # Scheduler completi e moduli di sistema rimanenti (82 file - FULL SUPERCORE)
-            "configstackspacesize.c",
-            "debugisthreaddispatchingallowed.c",
-            "debugunreachable.c",
-            "exceptionmapping.c",
-            "interr.c",
-            "isr.c",
-            "isrisinprogress.c",
-            "isrvectortable.c",
-            "iterateoverthreads.c",
-            "libatomic.c",
-            "log2table.c",
-            "mpci.c",
-            "mpcidefault.c",
-            "objectmp.c",
-            "percpu.c",
-            "percpuasm.c",
-            "percpudata.c",
-            "percpujobs.c",
-            "processormaskcopy.c",
-            "profilingisrentryexit.c",
-            "profilingsmplock.c",
-            "sched.c",
-            "schedulercbs.c",
-            "schedulercbsattachthread.c",
-            "schedulercbscleanup.c",
-            "schedulercbscreateserver.c",
-            "schedulercbsdestroyserver.c",
-            "schedulercbsdetachthread.c",
-            "schedulercbsgetapprovedbudget.c",
-            "schedulercbsgetexecutiontime.c",
-            "schedulercbsgetparameters.c",
-            "schedulercbsgetremainingbudget.c",
-            "schedulercbsgetserverid.c",
-            "schedulercbsnodeinit.c",
-            "schedulercbsreleasejob.c",
-            "schedulercbssetparameters.c",
-            "schedulercbsunblock.c",
-            "schedulerdefaultmakecleansticky.c",
-            "schedulerdefaultmappriority.c",
-            "schedulerdefaultnodedestroy.c",
-            "schedulerdefaultnodeinit.c",
-            "schedulerdefaultpinunpin.c",
-            "schedulerdefaultpinunpindonothing.c",
-            "schedulerdefaultreleasejob.c",
-            "schedulerdefaultsetaffinity.c",
-            "schedulerdefaultstartidle.c",
-            "scheduleredf.c",
-            "scheduleredfblock.c",
-            "scheduleredfchangepriority.c",
-            "scheduleredfnodeinit.c",
-            "scheduleredfreleasejob.c",
-            "scheduleredfschedule.c",
-            "scheduleredfsmp.c",
-            "scheduleredfunblock.c",
-            "scheduleredfyield.c",
-            "schedulergetaffinity.c",
-            "schedulerpriorityaffinitysmp.c",
-            "schedulerpriorityblock.c",
-            "schedulerprioritychangepriority.c",
-            "schedulerpriorityschedule.c",
-            "schedulerprioritysmp.c",
-            "schedulerpriorityunblock.c",
-            "schedulerpriorityyield.c",
-            "schedulersetaffinity.c",
-            "schedulersimpleblock.c",
-            "schedulersimplechangepriority.c",
-            "schedulersimpleschedule.c",
-            "schedulersimplesmp.c",
-            "schedulersimpleunblock.c",
-            "schedulersimpleyield.c",
-            "schedulersmp.c",
-            "schedulersmpstartidle.c",
-            "schedulerstrongapa.c",
-            "smp.c",
-            "smpbarrierwait.c",
-            "smpbroadcastaction.c",
-            "smplock.c",
-            "smpmulticastaction.c",
-            "smpothercastaction.c",
-            "smpsynchronize.c",
-            "smpunicastaction.c",
-            "tlsallocsize.c",
-            # Classic API - Gestione Task, Semafori ed Eventi (10 file)
-            "taskcreate.c",
-            "taskstart.c",
-            "taskdelete.c",
-            "tasksuspend.c",
-            "taskresume.c",
-            "semcreate.c",
-            "semobtain.c",
-            "semrelease.c",
-            "eventsend.c",
-            "eventreceive.c",
-            # Classic API - Message Queues (11 file)
-            "msg.c",
-            "msgqbroadcast.c",
-            "msgqconstruct.c",
-            "msgqcreate.c",
-            "msgqdelete.c",
-            "msgqflush.c",
-            "msgqgetnumberpending.c",
-            "msgqident.c",
-            "msgqreceive.c",
-            "msgqsend.c",
-            "msgqurgent.c",
-            # Classic API - Rate Monotonic & Timers (12 file)
-            "ratemon.c",
-            "ratemoncancel.c",
-            "ratemoncreate.c",
-            "ratemondelete.c",
-            "ratemongetstatistics.c",
-            "ratemongetstatus.c",
-            "ratemonident.c",
-            "ratemonperiod.c",
-            "ratemonreportstatistics.c",
-            "ratemonresetall.c",
-            "ratemonresetstatistics.c",
-            "ratemontimeout.c",
-            # Classic API - Barriere e Partizioni (13 file)
-            "barrier.c",
-            "barriercreate.c",
-            "barrierdelete.c",
-            "barrierident.c",
-            "barrierrelease.c",
-            "barriergetnumwaiting.c",
-            "barrierwait.c",
-            "part.c",
-            "partcreate.c",
-            "partdelete.c",
-            "partgetbuffer.c",
-            "partident.c",
-            "partreturnbuffer.c",
-            # Classic API - Segnali e Orologio TOD (15 file)
-            "signalcatch.c",
-            "signalsend.c",
-            "clockgetsecondssinceepoch.c",
-            "clockgettickssinceboot.c",
-            "clockgettickspersecond.c",
-            "clockgettod.c",
-            "clockgettodtimeval.c",
-            "clockgetuptime.c",
-            "clockgetuptimenanoseconds.c",
-            "clockgetuptimeseconds.c",
-            "clockgetuptimetimeval.c",
-            "clockset.c",
-            "clocktick.c",
-            "clocktodtoseconds.c",
-            "clocktodvalidate.c",
-            # SAPI - Inizializzazione Kernel, Errori e Driver I/O (15 file)
-            "exinit.c",
-            "exshutdown.c",
-            "fatal.c",
-            "fatalsrctext.c",
-            "panic.c",
-            "delaynano.c",
-            "delayticks.c",
-            "extension.c",
-            "extensioncreate.c",
-            "extensiondelete.c",
-            "extensionident.c",
-            "io.c",
-            "ioinitialize.c",
-            "ioregisterdriver.c",
-            "iounregisterdriver.c",
-            # Hardware Boot Boundary (1 file)
-            "bootcard.c",
-        ]
-        EDDI_TARGETS = [
-              "timespecisvalid.c",
+          # =========================================================================
+          # INSERIRE QUI IL MAIN ENTRY DELLE APPLICAZIONI O BENCHMARK
+          # (es. "init.c", "main.c", "aspis_sample_hardened/workload.c")
+          # =========================================================================
+          APP_BENCH_TARGETS = [
               "aspis_sample_hardened/workload.c",
+              "aspis_sample_hardened/apptask.c",
+              "aspis_sample_hardened/init.c",
+          ]
+
+          RASM_TARGETS = APP_BENCH_TARGETS + [
+              # Famiglia timespec (10 file)
+              "timespecisvalid.c",
+              "timespecaddto.c",
+              "timespecdivide.c",
+              "timespecdividebyinteger.c",
+              "timespecfromticks.c",
+              "timespecgetasnanoseconds.c",
+              "timespecisnonnegative.c",
+              "timespeclessthan.c",
+              "timespecsubtract.c",
+              "timespectoticks.c",
+              # Famiglia chain (2 file)
+              "chain.c",
+              "chainnodecount.c",
+              # Famiglia rbtree (11 file)
+              "rbtreeappend.c",
+              "rbtreeextract.c",
+              "rbtreeinsert.c",
+              "rbtreeiterate.c",
+              "rbtreemax.c",
+              "rbtreemin.c",
+              "rbtreenext.c",
+              "rbtreepostorder.c",
+              "rbtreeprepend.c",
+              "rbtreeprev.c",
+              "rbtreereplace.c",
+              # Famiglia watchdog (5 file)
+              "watchdoginsert.c",
+              "watchdogremove.c",
+              "watchdogtick.c",
+              "watchdogtickssinceboot.c",
+              "watchdogtimeslicedefault.c",
+              # Moduli core scheduler (4 file)
+              "scheduler.c",
+              "schedulerpriority.c",
+              "schedulersimple.c",
+              "schedulerdefaultschedule.c",
+              # Famiglia object (24 file)
+              "objectactivecount.c",
+              "objectallocate.c",
+              "objectallocatenone.c",
+              "objectallocatestatic.c",
+              "objectallocateunlimited.c",
+              "objectapimaximumclass.c",
+              "objectclose.c",
+              "objectextendinformation.c",
+              "objectfree.c",
+              "objectfreenothing.c",
+              "objectfreestatic.c",
+              "objectgetinfo.c",
+              "objectgetinfoid.c",
+              "objectgetlocal.c",
+              "objectgetnameasstring.c",
+              "objectgetnext.c",
+              "objectgetnoprotection.c",
+              "objectidtoname.c",
+              "objectinitializeinformation.c",
+              "objectnamespaceremove.c",
+              "objectnametoid.c",
+              "objectnametoidstring.c",
+              "objectsetname.c",
+              "objectshrinkinformation.c",
+              # Famiglia core primitive di sincronizzazione (24 file)
+              "corebarrier.c",
+              "corebarrierwait.c",
+              "coremsg.c",
+              "coremsgbroadcast.c",
+              "coremsgclose.c",
+              "coremsgflush.c",
+              "coremsgflushwait.c",
+              "coremsginsert.c",
+              "coremsgseize.c",
+              "coremsgsubmit.c",
+              "coremsgwkspace.c",
+              "coremutexseize.c",
+              "corerwlock.c",
+              "corerwlockobtainread.c",
+              "corerwlockobtainwrite.c",
+              "corerwlockrelease.c",
+              "coresem.c",
+              "coretod.c",
+              "coretodcheck.c",
+              "coretodhookdata.c",
+              "coretodhookregister.c",
+              "coretodhookrun.c",
+              "coretodhookunregister.c",
+              "coretodset.c",
+              # Gestione della memoria dinamica (19 file)
+              "heap.c",
+              "heapallocate.c",
+              "heapextend.c",
+              "heapfree.c",
+              "heapgetfreeinfo.c",
+              "heapgetinfo.c",
+              "heapgreedy.c",
+              "heapiterate.c",
+              "heapnoextend.c",
+              "heapresizeblock.c",
+              "heapsizeofuserarea.c",
+              "heapwalk.c",
+              "pheapallocate.c",
+              "pheapextend.c",
+              "pheapfree.c",
+              "pheapgetfreeinfo.c",
+              "pheapgetinfo.c",
+              "pheapgetsize.c",
+              "pheapwalk.c",
+              # Sottosistema memoria, stack e workspace (18 file)
+              "memoryallocate.c",
+              "memorydirtyfreeareas.c",
+              "memoryfill.c",
+              "memorynoinit.c",
+              "memoryzerobeforeuse.c",
+              "memoryzerofreeareas.c",
+              "stackallocator.c",
+              "stackallocatorforidle.c",
+              "stackallocatorforidlewkspace.c",
+              "stackallocatorfree.c",
+              "stackallocatorinit.c",
+              "wkspace.c",
+              "wkspaceallocate.c",
+              "wkspacefree.c",
+              "wkspaceisunifieddefault.c",
+              "wkspacemallocinitdefault.c",
+              "wkspacemallocinitunified.c",
+              "wkstringduplicate.c",
+              # Sottosistema thread management (43 file)
+              "thread.c",
+              "threadallocateunlimited.c",
+              "threadchangepriority.c",
+              "threadclearstate.c",
+              "threadcreateidle.c",
+              "threaddispatch.c",
+              "threadentryadaptoridle.c",
+              "threadentryadaptornumeric.c",
+              "threadentryadaptorpointer.c",
+              "threadexhausttimeslice.c",
+              "threadget.c",
+              "threadgetcputimeused.c",
+              "threadgetcputimeusedafterreset.c",
+              "threadhandler.c",
+              "threadidledefault.c",
+              "threadinitialize.c",
+              "threaditerate.c",
+              "threadloadenv.c",
+              "threadmp.c",
+              "threadname.c",
+              "threadplaindispatch.c",
+              "threadq.c",
+              "threadqenqueue.c",
+              "threadqextract.c",
+              "threadqextractwithproxy.c",
+              "threadqfirst.c",
+              "threadqflush.c",
+              "threadqgetnameandid.c",
+              "threadqops.c",
+              "threadqtimeout.c",
+              "threadresettimeslice.c",
+              "threadrestart.c",
+              "threadscheduler.c",
+              "threadselfid.c",
+              "threadsetstate.c",
+              "threadstackallocate.c",
+              "threadstackfree.c",
+              "threadstart.c",
+              "threadstartmultitasking.c",
+              "threadtimeout.c",
+              "threadunpin.c",
+              "threadwaitgetid.c",
+              "threadyield.c",
+              # Sincronizzazione primitiva, lock ed estensioni utente (15 file)
+              "userext.c",
+              "userextaddset.c",
+              "userextiterate.c",
+              "userextremoveset.c",
+              "mutex.c",
+              "semaphore.c",
+              "futex.c",
+              "condition.c",
+              "allocatormutex.c",
+              "apimutexisowner.c",
+              "apimutexlock.c",
+              "apimutexunlock.c",
+              "once.c",
+              "freechain.c",
+              "hash.c",
+              # Scheduler completi e moduli di sistema rimanenti (82 file - FULL SUPERCORE)
+              "configstackspacesize.c",
+              "debugisthreaddispatchingallowed.c",
+              "debugunreachable.c",
+              "exceptionmapping.c",
+              "interr.c",
+              "isr.c",
+              "isrisinprogress.c",
+              "isrvectortable.c",
+              "iterateoverthreads.c",
+              "libatomic.c",
+              "log2table.c",
+              "mpci.c",
+              "mpcidefault.c",
+              "objectmp.c",
+              "percpu.c",
+              "percpuasm.c",
+              "percpudata.c",
+              "percpujobs.c",
+              "processormaskcopy.c",
+              "profilingisrentryexit.c",
+              "profilingsmplock.c",
+              "sched.c",
+              "schedulercbs.c",
+              "schedulercbsattachthread.c",
+              "schedulercbscleanup.c",
+              "schedulercbscreateserver.c",
+              "schedulercbsdestroyserver.c",
+              "schedulercbsdetachthread.c",
+              "schedulercbsgetapprovedbudget.c",
+              "schedulercbsgetexecutiontime.c",
+              "schedulercbsgetparameters.c",
+              "schedulercbsgetremainingbudget.c",
+              "schedulercbsgetserverid.c",
+              "schedulercbsnodeinit.c",
+              "schedulercbsreleasejob.c",
+              "schedulercbssetparameters.c",
+              "schedulercbsunblock.c",
+              "schedulerdefaultmakecleansticky.c",
+              "schedulerdefaultmappriority.c",
+              "schedulerdefaultnodedestroy.c",
+              "schedulerdefaultnodeinit.c",
+              "schedulerdefaultpinunpin.c",
+              "schedulerdefaultpinunpindonothing.c",
+              "schedulerdefaultreleasejob.c",
+              "schedulerdefaultsetaffinity.c",
+              "schedulerdefaultstartidle.c",
+              "scheduleredf.c",
+              "scheduleredfblock.c",
+              "scheduleredfchangepriority.c",
+              "scheduleredfnodeinit.c",
+              "scheduleredfreleasejob.c",
+              "scheduleredfschedule.c",
+              "scheduleredfsmp.c",
+              "scheduleredfunblock.c",
+              "scheduleredfyield.c",
+              "schedulergetaffinity.c",
+              "schedulerpriorityaffinitysmp.c",
+              "schedulerpriorityblock.c",
+              "schedulerprioritychangepriority.c",
+              "schedulerpriorityschedule.c",
+              "schedulerprioritysmp.c",
+              "schedulerpriorityunblock.c",
+              "schedulerpriorityyield.c",
+              "schedulersetaffinity.c",
+              "schedulersimpleblock.c",
+              "schedulersimplechangepriority.c",
+              "schedulersimpleschedule.c",
+              "schedulersimplesmp.c",
+              "schedulersimpleunblock.c",
+              "schedulersimpleyield.c",
+              "schedulersmp.c",
+              "schedulersmpstartidle.c",
+              "schedulerstrongapa.c",
+              "smp.c",
+              "smpbarrierwait.c",
+              "smpbroadcastaction.c",
+              "smplock.c",
+              "smpmulticastaction.c",
+              "smpothercastaction.c",
+              "smpsynchronize.c",
+              "smpunicastaction.c",
+              "tlsallocsize.c",
+              # Classic API - Gestione Task, Semafori ed Eventi (10 file)
+              "taskcreate.c",
+              "taskstart.c",
+              "taskdelete.c",
+              "tasksuspend.c",
+              "taskresume.c",
+              "semcreate.c",
+              "semobtain.c",
+              "semrelease.c",
+              "eventsend.c",
+              "eventreceive.c",
+              # Classic API - Message Queues (11 file)
+              "msg.c",
+              "msgqbroadcast.c",
+              "msgqconstruct.c",
+              "msgqcreate.c",
+              "msgqdelete.c",
+              "msgqflush.c",
+              "msgqgetnumberpending.c",
+              "msgqident.c",
+              "msgqreceive.c",
+              "msgqsend.c",
+              "msgqurgent.c",
+              # Classic API - Rate Monotonic & Timers (12 file)
+              "ratemon.c",
+              "ratemoncancel.c",
+              "ratemoncreate.c",
+              "ratemondelete.c",
+              "ratemongetstatistics.c",
+              "ratemongetstatus.c",
+              "ratemonident.c",
+              "ratemonperiod.c",
+              "ratemonreportstatistics.c",
+              "ratemonresetall.c",
+              "ratemonresetstatistics.c",
+              "ratemontimeout.c",
+              # Classic API - Barriere e Partizioni (13 file)
+              "barrier.c",
+              "barriercreate.c",
+              "barrierdelete.c",
+              "barrierident.c",
+              "barrierrelease.c",
+              "barriergetnumwaiting.c",
+              "barrierwait.c",
+              "part.c",
+              "partcreate.c",
+              "partdelete.c",
+              "partgetbuffer.c",
+              "partident.c",
+              "partreturnbuffer.c",
+              # Classic API - Segnali e Orologio TOD (15 file)
+              "signalcatch.c",
+              "signalsend.c",
+              "clockgetsecondssinceepoch.c",
+              "clockgettickssinceboot.c",
+              "clockgettickspersecond.c",
+              "clockgettod.c",
+              "clockgettodtimeval.c",
+              "clockgetuptime.c",
+              "clockgetuptimenanoseconds.c",
+              "clockgetuptimeseconds.c",
+              "clockgetuptimetimeval.c",
+              "clockset.c",
+              "clocktick.c",
+              "clocktodtoseconds.c",
+              "clocktodvalidate.c",
+              # SAPI - Inizializzazione Kernel, Errori e Driver I/O (15 file)
+              "exinit.c",
+              "exshutdown.c",
+              "fatal.c",
+              "fatalsrctext.c",
+              "panic.c",
+              "delaynano.c",
+              "delayticks.c",
+              "extension.c",
+              "extensioncreate.c",
+              "extensiondelete.c",
+              "extensionident.c",
+              "io.c",
+              "ioinitialize.c",
+              "ioregisterdriver.c",
+              "iounregisterdriver.c",
+              # Hardware Boot Boundary (1 file)
+              "bootcard.c",
+          ]
+
+          EDDI_TARGETS = APP_BENCH_TARGETS + [
+              # INSERIRE EVENTUALI TARGET AGGIUNTIVI IN APP_BENCH_TARGETS SOPRA
+              "timespecisvalid.c",
               "threadstackallocate.c",
               "timespecaddto.c",
               "timespecdivide.c",
@@ -689,123 +696,182 @@ actions:
               "objectapimaximumclass.c",
               "processormaskcopy.c",
               "hash.c",
-              "memoryfill.c"
+              "memoryfill.c",
           ]
 
-        args = sys.argv[1:]
+          args = sys.argv[1:]
+          src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
+          src_base = os.path.basename(src) if src else ""
 
+          is_eddi = any(src.endswith('/' + target) or src == target or src_base == target for target in EDDI_TARGETS) if src else False
+          is_rasm = any(src.endswith('/' + target) or src == target or src_base == target for target in RASM_TARGETS) if src else False
 
-        src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
+          if not is_eddi and not is_rasm:
+              os.execv(CLANG, [CLANG] + args)
 
+          out = None
+          flags = []
+          skip_next = False
 
-        src_base = os.path.basename(src) if src else ""
-        is_eddi = any(src.endswith('/' + target) or src == target or src_base == target for target in EDDI_TARGETS) if src else False
-        is_rasm = any(src.endswith('/' + target) or src == target or src_base == target for target in RASM_TARGETS) if src else False
+          for i, a in enumerate(args):
+              if skip_next:
+                  skip_next = False
+                  continue
+              if a in ('-c', '-S'):
+                  continue
+              if a == '-o':
+                  out = args[i+1]
+                  skip_next = True
+                  continue
+              if a.startswith('-o') and len(a) > 2:
+                  out = a[2:]
+                  continue
+              if a in ('-MF', '-MT', '-MQ'):
+                  skip_next = True
+                  continue
+              if a in ('-MMD', '-MD', '-MP'):
+                  continue
+              if a == src:
+                  continue
+              flags.append(a)
 
-        if not is_eddi and not is_rasm:
-            os.execv(CLANG, [CLANG] + args)
+          if not out:
+              print("[aspis-cc] Errore: flag di output (-o) non trovato.", file=sys.stderr)
+              sys.exit(1)
 
+          depfile = out.rsplit('.o', 1)[0] + ".d" if out.endswith('.o') else out + ".d"
 
-        out = None
-        flags = []
-        skip_next = False
+          def run_cmd(cmd):
+              try:
+                  subprocess.run(cmd, check=True)
+              except subprocess.CalledProcessError as e:
+                  print(f"[aspis-cc] Errore comando: {' '.join(cmd)}", file=sys.stderr)
+                  sys.exit(e.returncode)
 
-        for i, a in enumerate(args):
-            if skip_next:
-                skip_next = False
-                continue
-            
-            if a in ('-c', '-S'):
-                continue
-            if a == '-o':
-                out = args[i+1]
-                skip_next = True
-                continue
-            if a.startswith('-o') and len(a) > 2:
-                out = a[2:]
-                continue
-            if a in ('-MF', '-MT', '-MQ'):
-                skip_next = True
-                continue
-            if a in ('-MMD', '-MD', '-MP'):
-                continue
-            if a == src:
-                continue
-                
-            flags.append(a)
+          tmp = f"/tmp/aspis_debug/{src_base}"
+          os.makedirs(tmp, exist_ok=True)
 
-        if not out:
-            print("[aspis-cc] Errore: flag di output (-o) non trovato.", file=sys.stderr)
-            sys.exit(1)
+          mono_raw = "/tmp/aspis_monolithic/raw_ll"
+          os.makedirs(mono_raw, exist_ok=True)
 
-        depfile = out.rsplit('.o', 1)[0] + ".d" if out.endswith('.o') else out + ".d"
+          a_ll = f"{tmp}/01_raw.ll"
+          run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
+          shutil.copyfile(a_ll, f"{mono_raw}/{src_base}.ll")
 
-       
-        def run_cmd(cmd):
-            try:
-                subprocess.run(cmd, check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"[aspis-cc] Errore comando: {' '.join(cmd)}", file=sys.stderr)
-                sys.exit(e.returncode)
+          current_ll = a_ll
 
+          if is_eddi:
+              b_ll = f"{tmp}/02_lower_switch.ll"
+              run_cmd([OPT, "-passes=lower-switch", current_ll, "-o", b_ll, "-S"])
+              current_ll = b_ll
 
-        # DEBUG IR
+              c_ll = f"{tmp}/03_func_ret_to_ref.ll"
+              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", current_ll, "-o", c_ll, "-S"])
+              current_ll = c_ll
 
-        src_base = os.path.basename(src)
-        tmp = f"/tmp/aspis_debug/{src_base}"
-        os.makedirs(tmp, exist_ok=True)
+              d_ll = f"{tmp}/04_eddi_verify.ll"
+              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", current_ll, "-o", d_ll, "-S"])
+              current_ll = d_ll
 
-        a_ll = f"{tmp}/a.ll"
-        b_ll = f"{tmp}/b.ll"
-        c_ll = f"{tmp}/c.ll"
-        d_ll = f"{tmp}/d.ll"
-        e_ll = f"{tmp}/e.ll"
-        f_ll = f"{tmp}/f.ll"
+              if is_rasm:
+                  e_ll = f"{tmp}/05_simplifycfg.ll"
+                  run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", e_ll, "-S"])
+                  current_ll = e_ll
 
-        # 1. Emissione LLVM IR grezzo
-        run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
+                  f_ll = f"{tmp}/06_rasm_verify.ll"
+                  run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", current_ll, "-o", f_ll, "-S"])
+                  current_ll = f_ll
 
-        current_ll = a_ll
+              g_ll = f"{tmp}/07_duplicate_globals.ll"
+              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", current_ll, "-o", g_ll, "-S"])
+              current_ll = g_ll
 
-        # 2. Pipeline EDDI iniziale: trasformazione ritorni e analisi/duplicazione memoria
-        if is_eddi:
-            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", current_ll, "-o", b_ll, "-S"])
-            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", b_ll, "-o", c_ll, "-S"])
-            current_ll = c_ll
+          elif is_rasm:
+              b_ll = f"{tmp}/02_lower_switch.ll"
+              run_cmd([OPT, "-passes=lower-switch", current_ll, "-o", b_ll, "-S"])
+              current_ll = b_ll
 
-        # 3. Pipeline RASM: normalizzazione switch e firme di controllo del flusso
-        if is_rasm:
-            run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", d_ll, "-S"])
-            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", d_ll, "-o", e_ll, "-S"])
-            current_ll = e_ll
+              c_ll = f"{tmp}/03_simplifycfg.ll"
+              run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", c_ll, "-S"])
+              current_ll = c_ll
 
-        # 4. Pipeline EDDI finale: duplicazione simboli globali
-        if is_eddi:
-            run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", current_ll, "-o", f_ll, "-S"])
-            current_ll = f_ll
+              d_ll = f"{tmp}/04_rasm_verify.ll"
+              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", current_ll, "-o", d_ll, "-S"])
+              current_ll = d_ll
 
-        # 5. Generazione codice macchina ELF
-        run_cmd([CLANG] + flags + ['-c', current_ll, '-o', out])
+          run_cmd([CLANG] + flags + ['-c', current_ll, '-o', out])
 
-        mode = "EDDI+RASM" if (is_eddi and is_rasm) else ("EDDI" if is_eddi else "RASM")
-        print(f"[aspis-cc] HARDENED [{mode}] {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
-        ''')
+          mode = "EDDI+RASM" if (is_eddi and is_rasm) else ("EDDI" if is_eddi else "RASM")
+          print(f"[aspis-cc] HARDENED [{mode}] {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
+          ''')
 
-    wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
-    with open(wrapper_path, 'w') as fp:
-        fp.write(wrapper_src)
-    os.chmod(wrapper_path, os.stat(wrapper_path).st_mode | stat.S_IEXEC)
+      wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
+      with open(wrapper_path, 'w') as fp:
+          fp.write(wrapper_src)
+      os.chmod(wrapper_path, os.stat(wrapper_path).st_mode | stat.S_IEXEC)
 
-    conf.env.CC = [wrapper_path]
+      conf.env.CC = [wrapper_path]
+
+      ar_wrapper_src = textwrap.dedent('''\
+          #!/usr/bin/env python3
+          import sys
+          import os
+          import glob
+          import subprocess
+
+          LLVM_AR = "/opt/rtems-llvm/rtems/bin/llvm-ar"
+          LLVM_LINK = "/opt/rtems-llvm/rtems/bin/llvm-link"
+          OPT = "/opt/rtems-llvm/rtems/bin/opt"
+          CLANG = "/opt/rtems-llvm/rtems/bin/clang"
+          PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
+
+          args = sys.argv[1:]
+
+          if any(a.endswith("cpukit/librtemscpu.a") for a in args):
+              raw_dir = "/tmp/aspis_monolithic/raw_ll"
+              out_dir = "/tmp/aspis_monolithic/output"
+              os.makedirs(out_dir, exist_ok=True)
+              ll_files = sorted(glob.glob(f"{raw_dir}/*.ll"))
+              if ll_files:
+                  print(f"[aspis-ar] Avvio pipeline monolitica ASPIS ({len(ll_files)} moduli IR)...", file=sys.stderr)
+                  s1 = f"{out_dir}/01_kernel_linked.ll"
+                  s2 = f"{out_dir}/02_kernel_lower_switch.ll"
+                  s3 = f"{out_dir}/03_kernel_func_ret.ll"
+                  s4 = f"{out_dir}/04_kernel_eddi.ll"
+                  s5 = f"{out_dir}/05_kernel_simplifycfg.ll"
+                  s6 = f"{out_dir}/06_kernel_rasm.ll"
+                  s7 = f"{out_dir}/07_kernel_globals.ll"
+                  mono_o = f"{out_dir}/kernel_monolithic.o"
+
+                  subprocess.run([LLVM_LINK, "-S"] + ll_files + ["-o", s1], check=True)
+                  subprocess.run([OPT, "-passes=lower-switch", s1, "-o", s2, "-S"], check=True)
+                  subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", s2, "-o", s3, "-S"], check=True)
+                  subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", s3, "-o", s4, "-S"], check=True)
+                  subprocess.run([OPT, "-passes=simplifycfg,lower-switch", s4, "-o", s5, "-S"], check=True)
+                  subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", s5, "-o", s6, "-S"], check=True)
+                  subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", s6, "-o", s7, "-S"], check=True)
+                  subprocess.run([CLANG, "--target=arm-rtems7", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-g", "-c", s7, "-o", mono_o], check=True)
+                  print(f"[aspis-ar] Pipeline monolitica completata: {mono_o}", file=sys.stderr)
+
+          os.execv(LLVM_AR, [LLVM_AR] + args)
+          ''')
+
+      ar_wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-ar')
+      with open(ar_wrapper_path, 'w') as fp:
+          fp.write(ar_wrapper_src)
+      os.chmod(ar_wrapper_path, os.stat(ar_wrapper_path).st_mode | stat.S_IEXEC)
+
+      conf.env.AR = [ar_wrapper_path]
 
 build-type: option
 copyrights:
-- Copyright (C) 2020 Hesham Almatary <Hesham.Almatary@cl.cam.ac.uk>
-- Copyright (C) 2020 embedded brains GmbH & Co. KG
+  - Copyright (C) 2020 Hesham Almatary <Hesham.Almatary@cl.cam.ac.uk>
+  - Copyright (C) 2020 embedded brains GmbH & Co. KG
 default: []
-description: ''
+description: ""
 enabled-by:
-- clang
+  - clang
 links: []
 name: clang
 type: build
+
