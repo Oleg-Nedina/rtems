@@ -62,49 +62,49 @@ extern "C" {
  *
  * @param[out] bt Returns the wall clock time.
  */
-void _Timecounter_Bintime( struct bintime *bt ) __attribute__((annotate("exclude")));
+void _Timecounter_Bintime( struct bintime *bt );
 
 /**
  * @brief Returns the wall clock time in the timespec format.
  *
  * @param[out] ts Returns the wall clock time.
  */
-void _Timecounter_Nanotime( struct timespec *ts ) __attribute__((annotate("exclude")));
+void _Timecounter_Nanotime( struct timespec *ts );
 
 /**
  * @brief Returns the wall clock time in the timeval format.
  *
  * @param[out] tv Returns the wall clock time.
  */
-void _Timecounter_Microtime( struct timeval *tv ) __attribute__((annotate("exclude")));
+void _Timecounter_Microtime( struct timeval *tv );
 
 /**
  * @brief Returns the uptime in the bintime format.
  *
  * @param[out] bt Returns the uptime.
  */
-void _Timecounter_Binuptime( struct bintime *bt ) __attribute__((annotate("exclude")));
+void _Timecounter_Binuptime( struct bintime *bt );
 
 /**
  * @brief Returns the uptime in the sbintime_t format.
  *
  * @return Returns the uptime.
  */
-int64_t _Timecounter_Sbinuptime( void ) __attribute__((annotate("exclude")));
+int64_t _Timecounter_Sbinuptime( void );
 
 /**
  * @brief Returns the uptime in the timespec format.
  *
  * @param[out] ts Returns the uptime.
  */
-void _Timecounter_Nanouptime( struct timespec *ts ) __attribute__((annotate("exclude")));
+void _Timecounter_Nanouptime( struct timespec *ts );
 
 /**
  * @brief Returns the uptime in the timeval format.
  *
  * @param[out] tv Returns the uptime.
  */
-void _Timecounter_Microuptime( struct timeval *tv ) __attribute__((annotate("exclude")));
+void _Timecounter_Microuptime( struct timeval *tv );
 
 /**
  * @brief Returns the wall clock time in the bintime format.
@@ -114,7 +114,7 @@ void _Timecounter_Microuptime( struct timeval *tv ) __attribute__((annotate("exc
  *
  * @param[out] ts Returns the wall clock time.
  */
-void _Timecounter_Getbintime( struct bintime *bt ) __attribute__((annotate("exclude")));
+void _Timecounter_Getbintime( struct bintime *bt );
 
 /**
  * @brief Returns the wall clock time in the timespec format.
@@ -126,7 +126,7 @@ void _Timecounter_Getbintime( struct bintime *bt ) __attribute__((annotate("excl
  *
  * @see _Timecounter_Getbintime().
  */
-void _Timecounter_Getnanotime( struct timespec *ts ) __attribute__((annotate("exclude")));
+void _Timecounter_Getnanotime( struct timespec *ts );
 
 /**
  * @brief Returns the wall clock time in the timeval format.
@@ -138,7 +138,7 @@ void _Timecounter_Getnanotime( struct timespec *ts ) __attribute__((annotate("ex
  *
  * @see _Timecounter_Getbintime().
  */
-void _Timecounter_Getmicrotime( struct timeval *tv ) __attribute__((annotate("exclude")));
+void _Timecounter_Getmicrotime( struct timeval *tv );
 
 /**
  * @brief Returns the uptime in the bintime format.
@@ -148,7 +148,7 @@ void _Timecounter_Getmicrotime( struct timeval *tv ) __attribute__((annotate("ex
  *
  * @param[out] ts Returns the uptime.
  */
-void _Timecounter_Getbinuptime( struct bintime *bt ) __attribute__((annotate("exclude")));
+void _Timecounter_Getbinuptime( struct bintime *bt );
 
 /**
  * @brief Returns the uptime in the timespec format.
@@ -158,7 +158,7 @@ void _Timecounter_Getbinuptime( struct bintime *bt ) __attribute__((annotate("ex
  *
  * @param[out] ts Returns the uptime.
  */
-void _Timecounter_Getnanouptime( struct timespec *ts ) __attribute__((annotate("exclude")));
+void _Timecounter_Getnanouptime( struct timespec *ts );
 
 /**
  * @brief Returns the uptime in the timeval format.
@@ -168,21 +168,21 @@ void _Timecounter_Getnanouptime( struct timespec *ts ) __attribute__((annotate("
  *
  * @param[out] tv Returns the uptime.
  */
-void _Timecounter_Getmicrouptime( struct timeval *tv ) __attribute__((annotate("exclude")));
+void _Timecounter_Getmicrouptime( struct timeval *tv );
 
 /**
  * @brief Returns the boot time in the timeval format.
  *
  * @param[out] tv Returns the boot time.
  */
-void _Timecounter_Getboottime( struct timeval *tv ) __attribute__((annotate("exclude")));
+void _Timecounter_Getboottime( struct timeval *tv );
 
 /**
  * @brief Returns the boot time in the bintime format.
  *
  * @param[out] tv Returns the boot time.
  */
-void _Timecounter_Getboottimebin( struct bintime *bt ) __attribute__((annotate("exclude")));
+void _Timecounter_Getboottimebin( struct bintime *bt );
 
 /**
  * @brief Installs the timecounter.
@@ -198,7 +198,7 @@ void _Timecounter_Install( struct timecounter *tc );
 /**
  * @brief Performs a timecounter tick.
  */
-void _Timecounter_Tick( void ) __attribute__((annotate("exclude")));
+void _Timecounter_Tick( void );
 
 #if ISR_LOCK_NEEDS_OBJECT
 /**
@@ -243,7 +243,7 @@ void _Timecounter_Tick_simple(
   uint32_t          delta,
   uint32_t          offset,
   ISR_lock_Context *lock_context
-) __attribute__((annotate("exclude")));
+);
 
 /**
  * @brief The wall clock time in seconds.
@@ -300,7 +300,7 @@ void _Timecounter_NTP_update_second( int64_t *adjustment, time_t *newsec );
  *
  * @return Returns the frequency in Hz.
  */
-uint64_t _Timecounter_Get_frequency( void ) __attribute__((annotate("exclude")));
+uint64_t _Timecounter_Get_frequency( void );
 
 /**
  * @brief Updates the timecounter frequency adjustment used by

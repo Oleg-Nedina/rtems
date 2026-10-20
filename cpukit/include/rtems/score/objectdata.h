@@ -339,7 +339,6 @@ struct Objects_Information {
  *
  * @retval NULL Always.
  */
-__attribute__((annotate("exclude")))
 Objects_Control *_Objects_Allocate_none( Objects_Information *information );
 
 /**
@@ -350,7 +349,6 @@ Objects_Control *_Objects_Allocate_none( Objects_Information *information );
  * @retval NULL No inactive object is available.
  * @retval object An inactive object.
  */
-__attribute__((annotate("exclude")))
 Objects_Control *_Objects_Allocate_static( Objects_Information *information );
 
 /**
@@ -363,7 +361,6 @@ Objects_Control *_Objects_Allocate_static( Objects_Information *information );
  * @retval NULL No inactive object is available.
  * @retval object An inactive object.
  */
-__attribute__((annotate("exclude")))
 Objects_Control *_Objects_Allocate_unlimited(
   Objects_Information *information
 );
@@ -376,7 +373,6 @@ Objects_Control *_Objects_Allocate_unlimited(
  * @param information The objects information.
  * @param the_object The object to free.
  */
-__attribute__((annotate("exclude")))
 void _Objects_Free_static(
   Objects_Information *information,
   Objects_Control     *the_object
@@ -391,7 +387,6 @@ void _Objects_Free_static(
  * @param information The objects information.
  * @param the_object The object to free.
  */
-__attribute__((annotate("exclude")))
 void _Objects_Free_unlimited(
   Objects_Information *information,
   Objects_Control     *the_object

@@ -128,7 +128,6 @@ static inline void _Freechain_Push( Freechain_Control *freechain, void *node )
  * @retval NULL The extend operation failed.
  * @retval nodes Pointer to the new nodes.
  */
-__attribute__((annotate("exclude")))
 void *_Freechain_Extend(
   Freechain_Control  *freechain,
   Freechain_Allocator allocator,
@@ -149,7 +148,6 @@ void *_Freechain_Extend(
  * @retval pointer Pointer to a node.  The node ownership passes to the
  * caller.
  */
-__attribute__((annotate("exclude")))
 void *_Freechain_Get(
   Freechain_Control  *freechain,
   Freechain_Allocator allocator,
@@ -164,7 +162,6 @@ void *_Freechain_Get(
  * @param[out] node The node to put back.  The node may be @c NULL, in this case
  *   the function does nothing.
  */
-__attribute__((annotate("exclude")))
 void _Freechain_Put( Freechain_Control *freechain, void *node );
 
 /** @} */
