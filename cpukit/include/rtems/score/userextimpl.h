@@ -285,6 +285,7 @@ void _User_extensions_Thread_terminate_visitor(
  * @param visitor The visitor for each extension.
  * @param direction The iteration direction for dynamic extensions.
  */
+__attribute__((annotate("exclude")))
 void _User_extensions_Iterate(
   void                    *arg,
   User_extensions_Visitor  visitor,
