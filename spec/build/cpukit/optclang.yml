@@ -703,8 +703,9 @@ actions:
           src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
           src_base = os.path.basename(src) if src else ""
 
-          is_eddi = any(src.endswith('/' + target) or src == target or src_base == target for target in EDDI_TARGETS) if src else False
-          is_rasm = any(src.endswith('/' + target) or src == target or src_base == target for target in RASM_TARGETS) if src else False
+          is_kernel_src = bool(src and ("cpukit/" in src or "bsps/" in src))
+          is_eddi = (any(src.endswith('/' + target) or src == target or (is_kernel_src and src_base == target) for target in EDDI_TARGETS)) if src else False
+          is_rasm = (any(src.endswith('/' + target) or src == target or (is_kernel_src and src_base == target) for target in RASM_TARGETS)) if src else False
 
           if not is_eddi and not is_rasm:
               os.execv(CLANG, [CLANG] + args)
@@ -756,7 +757,8 @@ actions:
 
           a_ll = f"{tmp}/01_raw.ll"
           run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
-          shutil.copyfile(a_ll, f"{mono_raw}/{src_base}.ll")
+          if is_kernel_src:
+              shutil.copyfile(a_ll, f"{mono_raw}/{src_base}.ll")
 
           current_ll = a_ll
 
@@ -816,7 +818,6 @@ actions:
           #!/usr/bin/env python3
           import sys
           import os
-          import glob
           import subprocess
 
           LLVM_AR = "/opt/rtems-llvm/rtems/bin/llvm-ar"
@@ -831,7 +832,54 @@ actions:
               raw_dir = "/tmp/aspis_monolithic/raw_ll"
               out_dir = "/tmp/aspis_monolithic/output"
               os.makedirs(out_dir, exist_ok=True)
-              ll_files = sorted(glob.glob(f"{raw_dir}/*.ll"))
+
+              def get_src_name(obj_path):
+                  base = os.path.basename(obj_path)
+                  if ".c." in base:
+                      return base.split(".c.")[0] + ".c"
+                  if base.endswith(".c.o"):
+                      return base[:-2]
+                  return None
+
+              CONFDEFS_FALLBACKS = {
+                  "wkspaceisunifieddefault.c",
+                  "wkspacemallocinitdefault.c",
+                  "wkspacemallocinitunified.c",
+                  "threadidledefault.c",
+                  "mpcidefault.c",
+                  "watchdogtimeslicedefault.c",
+                  "configstackspacesize.c",
+                  "memoryzerofreeareas.c",
+                  "memorydirtyfreeareas.c",
+                  "memoryzerobeforeuse.c",
+                  "memorynoinit.c",
+                  "heapnoextend.c",
+                  "stackallocator.c",
+                  "stackallocatorfree.c",
+                  "stackallocatorforidle.c",
+                  "stackallocatorforidlewkspace.c",
+                  "msg.c",
+                  "barrier.c",
+                  "part.c",
+                  "ratemon.c",
+                  "extension.c",
+              }
+
+              hardened_ll_files = []
+              new_args = []
+
+              for a in args:
+                  if a.endswith(".o"):
+                      src_c = get_src_name(a)
+                      if src_c and src_c not in CONFDEFS_FALLBACKS:
+                          ll_path = os.path.join(raw_dir, f"{src_c}.ll")
+                          if os.path.exists(ll_path):
+                              hardened_ll_files.append(ll_path)
+                              continue
+                  new_args.append(a)
+
+              ll_files = sorted(list(set(hardened_ll_files)))
+
               if ll_files:
                   print(f"[aspis-ar] Avvio pipeline monolitica ASPIS ({len(ll_files)} moduli IR)...", file=sys.stderr)
                   s1 = f"{out_dir}/01_kernel_linked.ll"
@@ -850,8 +898,19 @@ actions:
                   subprocess.run([OPT, "-passes=simplifycfg,lower-switch", s4, "-o", s5, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", s5, "-o", s6, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", s6, "-o", s7, "-S"], check=True)
-                  subprocess.run([CLANG, "--target=arm-rtems7", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-g", "-c", s7, "-o", mono_o], check=True)
+                  subprocess.run([CLANG, "--target=arm-rtems7", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-gdwarf-4", "-g", "-c", s7, "-o", mono_o], check=True)
                   print(f"[aspis-ar] Pipeline monolitica completata: {mono_o}", file=sys.stderr)
+
+                  new_args.append(mono_o)
+
+                  for a in args:
+                      if a.endswith("librtemscpu.a") and os.path.exists(a):
+                          try:
+                              os.remove(a)
+                          except OSError:
+                              pass
+
+                  os.execv(LLVM_AR, [LLVM_AR] + new_args)
 
           os.execv(LLVM_AR, [LLVM_AR] + args)
           ''')

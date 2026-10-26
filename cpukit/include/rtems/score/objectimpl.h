@@ -148,6 +148,7 @@ void _Objects_Shrink_information( Objects_Information *information );
  *
  * @param information The object information to be initialized.
  */
+__attribute__((annotate("exclude")))
 void _Objects_Initialize_information( Objects_Information *information );
 
 /**

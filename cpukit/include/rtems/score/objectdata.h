@@ -412,7 +412,7 @@ void _Objects_Free_unlimited(
  *   objects without a string name.
  */
 #define OBJECTS_INFORMATION_DEFINE_ZERO( name, api, cls, nl ) \
-  Objects_Information name##_Information = {                  \
+  Objects_Information name##_Information __attribute__((annotate("exclude"))) = { \
     _Objects_Build_id( api, cls, 1, 0 ),                      \
     NULL,                                                     \
     _Objects_Allocate_none,                                   \
