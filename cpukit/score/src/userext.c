@@ -41,7 +41,7 @@
 
 #include <rtems/score/userextimpl.h>
 
-void _User_extensions_Handler_initialization( void )
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Handler_initialization( void )
 {
   const User_extensions_Table    *initial_table;
   User_extensions_Switch_control *initial_switch_controls;

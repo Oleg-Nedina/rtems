@@ -186,7 +186,7 @@ void _Stack_Allocator_do_initialize( void );
 void *_Stack_Allocator_allocate_for_idle_workspace(
   uint32_t unused,
   size_t  *storage_size
-);
+) __attribute__((noinline, annotate("exclude")));
 
 /**
  * @brief The size in bytes of the idle thread storage area used by
@@ -219,7 +219,7 @@ extern char _Stack_Allocator_allocate_for_idle_storage_areas[];
 void *_Stack_Allocator_allocate_for_idle_static(
   uint32_t cpu_index,
   size_t  *storage_size
-);
+) __attribute__((noinline, annotate("exclude")));
 
 /**
  * @brief The stack allocator allocate stack for idle thread handler.

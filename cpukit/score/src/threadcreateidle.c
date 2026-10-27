@@ -53,7 +53,7 @@
 
 #include <string.h>
 
-static void _Thread_Create_idle_for_CPU(
+static void __attribute__((noinline, annotate("exclude"))) _Thread_Create_idle_for_CPU(
   Per_CPU_Control *cpu,
   uintptr_t        storage_size
 )
@@ -122,7 +122,7 @@ static void _Thread_Create_idle_for_CPU(
   _User_extensions_Thread_start( idle );
 }
 
-void _Thread_Create_idle( void )
+void __attribute__((noinline, annotate("exclude"))) _Thread_Create_idle( void )
 {
   uintptr_t storage_size;
 #if defined( RTEMS_SMP )

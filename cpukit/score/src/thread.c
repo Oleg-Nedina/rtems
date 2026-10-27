@@ -66,7 +66,7 @@ THREAD_OFFSET_ASSERT( Timer );
 THREAD_OFFSET_ASSERT( receive_packet );
 #endif
 
-void _Thread_Initialize_information( Thread_Information *information )
+void __attribute__((noinline, annotate("exclude"))) _Thread_Initialize_information( Thread_Information *information )
 {
   _Objects_Initialize_information( &information->Objects );
 
@@ -78,7 +78,7 @@ void _Thread_Initialize_information( Thread_Information *information )
   );
 }
 
-void _Thread_Handler_initialization( void )
+void __attribute__((noinline, annotate("exclude"))) _Thread_Handler_initialization( void )
 {
 #if defined( RTEMS_MULTIPROCESSING )
   _Thread_MP_Handler_initialization( _MPCI_Configuration.maximum_proxies );

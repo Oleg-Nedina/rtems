@@ -1161,7 +1161,7 @@ typedef struct {
 extern Thread_Information _Thread_Information;
 
 #define THREAD_INFORMATION_DEFINE_ZERO( name, api, cls )               \
-  Thread_Information name##_Information = {                            \
+  Thread_Information name##_Information __attribute__((annotate("exclude"))) = { \
     {                                                                  \
       _Objects_Build_id( api, cls, 1, 0 ),                             \
       NULL,                                                            \

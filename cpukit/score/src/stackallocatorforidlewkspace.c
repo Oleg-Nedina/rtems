@@ -42,7 +42,7 @@
 #include <rtems/score/interr.h>
 #include <rtems/score/wkspace.h>
 
-void *_Stack_Allocator_allocate_for_idle_workspace(
+void * __attribute__((noinline, annotate("exclude"))) _Stack_Allocator_allocate_for_idle_workspace(
   uint32_t unused,
   size_t  *storage_size
 )

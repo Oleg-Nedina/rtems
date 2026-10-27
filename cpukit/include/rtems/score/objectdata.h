@@ -349,7 +349,8 @@ Objects_Control *_Objects_Allocate_none( Objects_Information *information );
  * @retval NULL No inactive object is available.
  * @retval object An inactive object.
  */
-Objects_Control *_Objects_Allocate_static( Objects_Information *information );
+Objects_Control *_Objects_Allocate_static( Objects_Information *information )
+  __attribute__((annotate("exclude")));
 
 /**
  * @brief Return an inactive object or NULL.
@@ -376,7 +377,7 @@ Objects_Control *_Objects_Allocate_unlimited(
 void _Objects_Free_static(
   Objects_Information *information,
   Objects_Control     *the_object
-);
+) __attribute__((annotate("exclude")));
 
 /**
  * @brief Free the object.

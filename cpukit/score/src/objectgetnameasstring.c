@@ -53,7 +53,7 @@ static bool _Objects_Name_char_is_printable( char c )
   return uc >= ' ' && uc <= '~';
 }
 
-size_t _Objects_Name_to_string(
+size_t __attribute__((noinline, annotate("exclude"))) _Objects_Name_to_string(
   Objects_Name name,
   bool         is_string,
   char        *buffer,
@@ -104,7 +104,7 @@ size_t _Objects_Name_to_string(
  *  overflowing the user's string and about returning unprintable characters.
  */
 
-char *_Objects_Get_name_as_string( Objects_Id id, size_t length, char *name )
+char * __attribute__((noinline, annotate("exclude"))) _Objects_Get_name_as_string( Objects_Id id, size_t length, char *name )
 {
   const Objects_Information *information;
   const Objects_Control     *the_object;

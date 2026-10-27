@@ -41,7 +41,7 @@
 
 #include <rtems/score/threadimpl.h>
 
-Thread_Control *_Thread_Get( Objects_Id id, ISR_lock_Context *lock_context )
+Thread_Control * __attribute__((noinline, annotate("exclude"))) _Thread_Get( Objects_Id id, ISR_lock_Context *lock_context )
 {
   Objects_Information *information;
 

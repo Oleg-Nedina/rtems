@@ -29,7 +29,7 @@
 
 #include <bsp/bootcard.h>
 
-void bsp_reset( rtems_fatal_source source, rtems_fatal_code code )
+void __attribute__((noinline, annotate("exclude"))) bsp_reset( rtems_fatal_source source, rtems_fatal_code code )
 {
   rtems_interrupt_level level;
 

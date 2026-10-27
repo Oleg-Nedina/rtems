@@ -120,7 +120,7 @@ static bool _Heap_Protection_determine_block_free(
 }
 #endif
 
-bool _Heap_Free( Heap_Control *heap, void *alloc_begin_ptr )
+bool __attribute__((noinline, annotate("exclude"))) _Heap_Free( Heap_Control *heap, void *alloc_begin_ptr )
 {
   Heap_Statistics *const stats = &heap->stats;
   uintptr_t              alloc_begin;

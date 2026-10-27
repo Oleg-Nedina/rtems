@@ -41,7 +41,7 @@
 
 #include <rtems/score/objectimpl.h>
 
-Objects_Information *_Objects_Get_information(
+Objects_Information * __attribute__((noinline, annotate("exclude"))) _Objects_Get_information(
   Objects_APIs the_api,
   uint16_t     the_class
 )

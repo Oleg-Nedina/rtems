@@ -41,7 +41,7 @@
 
 #include <rtems/score/objectimpl.h>
 
-Objects_Control *_Objects_Get_no_protection(
+Objects_Control * __attribute__((annotate("exclude"))) _Objects_Get_no_protection(
   Objects_Id                 id,
   const Objects_Information *information
 )

@@ -46,7 +46,7 @@
 #include <rtems/score/sysstate.h>
 #include <rtems/score/userextimpl.h>
 
-System_state_Codes _System_state_Current;
+System_state_Codes __attribute__((annotate("exclude"))) _System_state_Current;
 
 void _Terminate(
   Internal_errors_Source the_source,

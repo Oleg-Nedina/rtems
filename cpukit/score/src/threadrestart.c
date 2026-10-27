@@ -63,7 +63,7 @@ static void _Thread_Life_action_handler(
   ISR_lock_Context *lock_context
 );
 
-Thread_Zombie_registry _Thread_Zombies = {
+Thread_Zombie_registry __attribute__((annotate("exclude"))) _Thread_Zombies = {
 #if defined( RTEMS_SMP )
   .Lock = ISR_LOCK_INITIALIZER( "Thread Zombies" ),
 #endif

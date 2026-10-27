@@ -75,7 +75,8 @@ void _Workspace_Handler_initialization( void );
  * @retval NULL No memory block with the requested size is available in the
  *   workspace.
  */
-void *_Workspace_Allocate( size_t size );
+void *_Workspace_Allocate( size_t size )
+  __attribute__((noinline, annotate("exclude")));
 
 /**
  * @brief Frees memory to the workspace.
@@ -88,7 +89,8 @@ void *_Workspace_Allocate( size_t size );
  *        This allows the caller to not worry about whether or not
  *        a pointer is NULL.
  */
-void _Workspace_Free( void *block );
+void _Workspace_Free( void *block )
+  __attribute__((noinline, annotate("exclude")));
 
 /**
  * @brief Duplicates string with memory from the workspace.

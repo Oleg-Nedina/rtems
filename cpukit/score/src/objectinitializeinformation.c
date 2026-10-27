@@ -44,7 +44,7 @@
 #include <rtems/score/chainimpl.h>
 #include <rtems/score/sysstate.h>
 
-__attribute__((annotate("exclude")))
+__attribute__((noinline, annotate("exclude")))
 void _Objects_Initialize_information( Objects_Information *information )
 {
   Objects_Id       maximum_id;

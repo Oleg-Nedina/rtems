@@ -41,7 +41,7 @@
 #include <rtems/score/assert.h>
 #include <rtems/score/heapimpl.h>
 
-void _Workspace_Free( void *block )
+void __attribute__((noinline, annotate("exclude"))) _Workspace_Free( void *block )
 {
   bool ok;
 

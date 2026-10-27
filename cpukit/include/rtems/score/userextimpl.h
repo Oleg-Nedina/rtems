@@ -107,7 +107,7 @@ extern Chain_Control _User_extensions_Switches_list;
 /**
  * @brief Initializes the user extensions handler.
  */
-void _User_extensions_Handler_initialization( void );
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Handler_initialization( void );
 
 /**
  * @brief Adds a user extension.
@@ -176,7 +176,7 @@ typedef struct {
  * @param[in, out] arg Is used as the thread create context for the operation.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_create_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_create_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -189,7 +189,7 @@ void _User_extensions_Thread_create_visitor(
  * @param[in, out] arg Parameter for the callout.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_delete_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_delete_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -202,7 +202,7 @@ void _User_extensions_Thread_delete_visitor(
  * @param arg Parameter for the callout.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_start_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_start_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -215,7 +215,7 @@ void _User_extensions_Thread_start_visitor(
  * @param arg Parameter for the callout.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_restart_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_restart_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -228,7 +228,7 @@ void _User_extensions_Thread_restart_visitor(
  * @param arg This parameter is unused.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_begin_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_begin_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -241,7 +241,7 @@ void _User_extensions_Thread_begin_visitor(
  * @param arg This parameter is unused.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_exitted_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_exitted_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -259,7 +259,7 @@ typedef struct {
  * @param arg Is used as the user extension fatal context.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Fatal_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Fatal_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -272,7 +272,7 @@ void _User_extensions_Fatal_visitor(
  * @param arg This parameter is unused.
  * @param callouts The user extension table for the operation.
  */
-void _User_extensions_Thread_terminate_visitor(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_terminate_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -285,8 +285,7 @@ void _User_extensions_Thread_terminate_visitor(
  * @param visitor The visitor for each extension.
  * @param direction The iteration direction for dynamic extensions.
  */
-__attribute__((annotate("exclude")))
-void _User_extensions_Iterate(
+void __attribute__((noinline, annotate("exclude"))) _User_extensions_Iterate(
   void                    *arg,
   User_extensions_Visitor  visitor,
   Chain_Iterator_direction direction
