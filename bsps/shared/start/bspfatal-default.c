@@ -44,7 +44,7 @@
 #include <rtems/score/threadimpl.h>
 #include <inttypes.h>
 
-void __attribute__((noinline, annotate("exclude"))) bsp_fatal_extension(
+void bsp_fatal_extension(
   rtems_fatal_source source,
   bool always_set_to_false,
   rtems_fatal_code code

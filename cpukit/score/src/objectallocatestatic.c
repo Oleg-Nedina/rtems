@@ -41,7 +41,7 @@
 #include <rtems/score/objectdata.h>
 #include <rtems/score/objectimpl.h>
 
-Objects_Control * __attribute__((annotate("exclude"))) _Objects_Allocate_static( Objects_Information *information )
+Objects_Control *_Objects_Allocate_static( Objects_Information *information )
 {
   return _Objects_Get_inactive( information );
 }

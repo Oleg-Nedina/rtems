@@ -56,7 +56,7 @@
 Thread_Control *_Thread_Allocated_fp;
 #endif
 
-Chain_Control __attribute__((annotate("exclude"))) _User_extensions_Switches_list = CHAIN_INITIALIZER_EMPTY( _User_extensions_Switches_list );
+Chain_Control _User_extensions_Switches_list = CHAIN_INITIALIZER_EMPTY( _User_extensions_Switches_list );
 
 #if defined( RTEMS_SMP )
 static ISR_Level _Thread_Check_pinning(

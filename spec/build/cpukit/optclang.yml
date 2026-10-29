@@ -80,6 +80,7 @@ actions:
 
       conf.env.LINK_CC = [gcc]
       conf.env.LINK_CXX = [gxx]
+      conf.env.OBJCOPY = [f"{triple}-objcopy"]
       conf.env.append_value('LINKFLAGS', ['-qrtems'])
 
       wrapper_src = textwrap.dedent('''\
@@ -93,14 +94,16 @@ actions:
           OPT = "/opt/rtems-llvm/rtems/bin/opt"
           PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
 
-          # =========================================================================
-          # INSERIRE QUI IL MAIN ENTRY DELLE APPLICAZIONI O BENCHMARK
-          # (es. "init.c", "main.c", "aspis_sample_hardened/workload.c")
-          # =========================================================================
           APP_BENCH_TARGETS = [
-              "aspis_sample_hardened/workload.c",
-              "aspis_sample_hardened/apptask.c",
-              "aspis_sample_hardened/init.c",
+              "prof_monolithic/main.c",
+              "acas/acas.c",
+              "ann/ann.c",
+              "canny/canny.c",
+              "img_scaling/img_scaling.c",
+              "latnav/latnav.c",
+              "jpeg/jpeg_compress.c",
+              "common/crc.c",
+              "common/simple_random.c",
           ]
 
           RASM_TARGETS = APP_BENCH_TARGETS + [
@@ -699,15 +702,30 @@ actions:
               "memoryfill.c",
           ]
 
+          CONFDEFS_FALLBACKS = {
+              "wkspaceisunifieddefault.c",
+              "wkspacemallocinitdefault.c",
+              "mpcidefault.c",
+              "memorynoinit.c",
+              "msg.c",
+              "sem.c",
+              "tasks.c",
+              "taskinitdefault.c",
+              "libiozeroiops.c",
+              "default-configuration.c",
+              "sysinitverbose.c",
+          }
+
           args = sys.argv[1:]
           src = next((a for a in args if a.endswith('.c') and not a.startswith('-')), None)
           src_base = os.path.basename(src) if src else ""
 
-          is_kernel_src = bool(src and ("cpukit/" in src or "bsps/" in src))
-          is_eddi = (any(src.endswith('/' + target) or src == target or (is_kernel_src and src_base == target) for target in EDDI_TARGETS)) if src else False
-          is_rasm = (any(src.endswith('/' + target) or src == target or (is_kernel_src and src_base == target) for target in RASM_TARGETS)) if src else False
+          is_app_src = bool(src and any(src.endswith('/' + target) or src == target for target in APP_BENCH_TARGETS))
+          is_kernel_src = bool(src and any(k_dir in src for k_dir in ("cpukit/score/", "cpukit/rtems/", "cpukit/sapi/")) and src_base not in CONFDEFS_FALLBACKS)
+          is_bootcard_src = bool(src and src_base == "bootcard.c")
+          is_monolith_src = is_kernel_src or is_app_src or is_bootcard_src
 
-          if not is_eddi and not is_rasm:
+          if not is_monolith_src:
               os.execv(CLANG, [CLANG] + args)
 
           out = None
@@ -753,58 +771,27 @@ actions:
           os.makedirs(tmp, exist_ok=True)
 
           mono_raw = "/tmp/aspis_monolithic/raw_ll"
-          os.makedirs(mono_raw, exist_ok=True)
+          mono_raw_kernel = "/tmp/aspis_monolithic/raw_ll/kernel"
+          mono_raw_app = "/tmp/aspis_monolithic/raw_ll/app"
+          os.makedirs(mono_raw_kernel, exist_ok=True)
+          os.makedirs(mono_raw_app, exist_ok=True)
 
           a_ll = f"{tmp}/01_raw.ll"
           run_cmd([CLANG] + flags + ['-g', '-MMD', '-MF', depfile, '-emit-llvm', '-S', src, '-o', a_ll])
-          if is_kernel_src:
+
+          if is_kernel_src or src_base == "bootcard.c":
               shutil.copyfile(a_ll, f"{mono_raw}/{src_base}.ll")
+              shutil.copyfile(a_ll, f"{mono_raw_kernel}/{src_base}.ll")
+              run_cmd([CLANG, "--target=arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-x", "c", "/dev/null", "-c", "-o", out])
+              print(f"[aspis-cc] MONOLITH-KERNEL-IR {src} -> {mono_raw_kernel}/{src_base}.ll", file=sys.stderr)
+              sys.exit(0)
 
-          current_ll = a_ll
-
-          if is_eddi:
-              b_ll = f"{tmp}/02_lower_switch.ll"
-              run_cmd([OPT, "-passes=lower-switch", current_ll, "-o", b_ll, "-S"])
-              current_ll = b_ll
-
-              c_ll = f"{tmp}/03_func_ret_to_ref.ll"
-              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", current_ll, "-o", c_ll, "-S"])
-              current_ll = c_ll
-
-              d_ll = f"{tmp}/04_eddi_verify.ll"
-              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=eddi-verify", current_ll, "-o", d_ll, "-S"])
-              current_ll = d_ll
-
-              if is_rasm:
-                  e_ll = f"{tmp}/05_simplifycfg.ll"
-                  run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", e_ll, "-S"])
-                  current_ll = e_ll
-
-                  f_ll = f"{tmp}/06_rasm_verify.ll"
-                  run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", current_ll, "-o", f_ll, "-S"])
-                  current_ll = f_ll
-
-              g_ll = f"{tmp}/07_duplicate_globals.ll"
-              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", current_ll, "-o", g_ll, "-S"])
-              current_ll = g_ll
-
-          elif is_rasm:
-              b_ll = f"{tmp}/02_lower_switch.ll"
-              run_cmd([OPT, "-passes=lower-switch", current_ll, "-o", b_ll, "-S"])
-              current_ll = b_ll
-
-              c_ll = f"{tmp}/03_simplifycfg.ll"
-              run_cmd([OPT, "-passes=simplifycfg,lower-switch", current_ll, "-o", c_ll, "-S"])
-              current_ll = c_ll
-
-              d_ll = f"{tmp}/04_rasm_verify.ll"
-              run_cmd([OPT, "-load-pass-plugin", f"{PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", current_ll, "-o", d_ll, "-S"])
-              current_ll = d_ll
-
-          run_cmd([CLANG] + flags + ['-c', current_ll, '-o', out])
-
-          mode = "EDDI+RASM" if (is_eddi and is_rasm) else ("EDDI" if is_eddi else "RASM")
-          print(f"[aspis-cc] HARDENED [{mode}] {src} -> {out} (IR salvata in {tmp})", file=sys.stderr)
+          if is_app_src:
+              shutil.copyfile(a_ll, f"{mono_raw}/{src_base}.ll")
+              shutil.copyfile(a_ll, f"{mono_raw_app}/{src_base}.ll")
+              run_cmd([CLANG, "--target=arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-x", "c", "/dev/null", "-c", "-o", out])
+              print(f"[aspis-cc] MONOLITH-APP-IR {src} -> {mono_raw_app}/{src_base}.ll", file=sys.stderr)
+              sys.exit(0)
           ''')
 
       wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-cc')
@@ -818,6 +805,7 @@ actions:
           #!/usr/bin/env python3
           import sys
           import os
+          import shutil
           import subprocess
 
           LLVM_AR = "/opt/rtems-llvm/rtems/bin/llvm-ar"
@@ -825,13 +813,90 @@ actions:
           OPT = "/opt/rtems-llvm/rtems/bin/opt"
           CLANG = "/opt/rtems-llvm/rtems/bin/clang"
           PASSES = "/opt/rtems-llvm/ASPIS/build/passes"
+          SRC_ROOT = "/opt/rtems-llvm/src/rtems"
+          BLD_ROOT = "/opt/rtems-llvm/src/rtems/build/arm/stm32f4"
+
+          APP_BENCH_REL = [
+              "testsuites/benchmarks/prof_monolithic/main.c",
+              "testsuites/benchmarks/acas/acas.c",
+              "testsuites/benchmarks/ann/ann.c",
+              "testsuites/benchmarks/canny/canny.c",
+              "testsuites/benchmarks/img_scaling/img_scaling.c",
+              "testsuites/benchmarks/latnav/latnav.c",
+              "testsuites/benchmarks/jpeg/jpeg_compress.c",
+              "testsuites/benchmarks/common/crc.c",
+              "testsuites/benchmarks/common/simple_random.c",
+          ]
 
           args = sys.argv[1:]
 
           if any(a.endswith("librtemscpu.a") for a in args):
               raw_dir = "/tmp/aspis_monolithic/raw_ll"
+              raw_kernel_dir = "/tmp/aspis_monolithic/raw_ll/kernel"
+              raw_app_dir = "/tmp/aspis_monolithic/raw_ll/app"
               out_dir = "/tmp/aspis_monolithic/output"
+              persist_dir = "/opt/rtems-llvm/ir_monolithic_dump"
+              os.makedirs(raw_kernel_dir, exist_ok=True)
+              os.makedirs(raw_app_dir, exist_ok=True)
               os.makedirs(out_dir, exist_ok=True)
+
+              clang_res = subprocess.check_output([CLANG, "--print-resource-dir"], text=True).strip()
+
+              app_flags = [
+                  "--target=arm-rtems7",
+                  "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7",
+                  "--gcc-toolchain=/opt/rtems-llvm/rtems",
+                  "-Qunused-arguments",
+                  "-isystem", f"{clang_res}/include",
+                  "-isystem", "/opt/rtems-llvm/rtems/arm-rtems7/include",
+                  "-mcpu=cortex-m4",
+                  "-mthumb",
+                  "-mfloat-abi=hard",
+                  "-mfpu=fpv4-sp-d16",
+                  "-ffunction-sections",
+                  "-fdata-sections",
+                  "-O2",
+                  "-g",
+                  "-std=gnu23",
+                  "-D_BSD_SOURCE",
+                  "-DCLASS_A",
+                  "-Wno-gnu-variable-sized-type-not-at-end",
+                  f"-I{BLD_ROOT}/cpukit/include",
+                  f"-I{SRC_ROOT}/cpukit/include",
+                  f"-I{BLD_ROOT}/cpukit/score/cpu/arm/include",
+                  f"-I{SRC_ROOT}/cpukit/score/cpu/arm/include",
+                  f"-I{BLD_ROOT}/cpukit/contrib/include",
+                  f"-I{SRC_ROOT}/cpukit/contrib/include",
+                  f"-I{BLD_ROOT}/contrib/cpukit/include",
+                  f"-I{SRC_ROOT}/contrib/cpukit/include",
+                  f"-I{BLD_ROOT}/bsps/include",
+                  f"-I{SRC_ROOT}/bsps/include",
+                  f"-I{BLD_ROOT}/bsps/arm/include",
+                  f"-I{SRC_ROOT}/bsps/arm/include",
+                  f"-I{BLD_ROOT}/bsps/arm/stm32f4/include",
+                  f"-I{SRC_ROOT}/bsps/arm/stm32f4/include",
+                  f"-I{SRC_ROOT}/testsuites/benchmarks/include",
+                  f"-I{SRC_ROOT}/testsuites/support/include",
+              ]
+
+              app_ll_files = []
+              for rel_c in APP_BENCH_REL:
+                  abs_c = os.path.join(SRC_ROOT, rel_c)
+                  base_c = os.path.basename(rel_c)
+                  app_ll = os.path.join(raw_app_dir, f"{base_c}.ll")
+                  dbg_dir = f"/tmp/aspis_debug/{base_c}"
+                  os.makedirs(dbg_dir, exist_ok=True)
+                  subprocess.run([CLANG] + app_flags + ["-emit-llvm", "-S", abs_c, "-o", app_ll], check=True)
+                  shutil.copyfile(app_ll, os.path.join(raw_dir, f"{base_c}.ll"))
+                  shutil.copyfile(app_ll, os.path.join(dbg_dir, "01_raw.ll"))
+                  app_ll_files.append(app_ll)
+
+              bootcard_abs = os.path.join(SRC_ROOT, "bsps/shared/start/bootcard.c")
+              bootcard_ll = os.path.join(raw_kernel_dir, "bootcard.c.ll")
+              os.makedirs("/tmp/aspis_debug/bootcard.c", exist_ok=True)
+              subprocess.run([CLANG] + app_flags + ["-DHAVE_CONFIG_H", "-emit-llvm", "-S", bootcard_abs, "-o", bootcard_ll], check=True)
+              shutil.copyfile(bootcard_ll, os.path.join(raw_dir, "bootcard.c.ll"))
+              shutil.copyfile(bootcard_ll, "/tmp/aspis_debug/bootcard.c/01_raw.ll")
 
               def get_src_name(obj_path):
                   base = os.path.basename(obj_path)
@@ -844,44 +909,39 @@ actions:
               CONFDEFS_FALLBACKS = {
                   "wkspaceisunifieddefault.c",
                   "wkspacemallocinitdefault.c",
-                  "wkspacemallocinitunified.c",
-                  "threadidledefault.c",
                   "mpcidefault.c",
-                  "watchdogtimeslicedefault.c",
-                  "configstackspacesize.c",
-                  "memoryzerofreeareas.c",
-                  "memorydirtyfreeareas.c",
-                  "memoryzerobeforeuse.c",
                   "memorynoinit.c",
-                  "heapnoextend.c",
-                  "stackallocator.c",
-                  "stackallocatorfree.c",
-                  "stackallocatorforidle.c",
-                  "stackallocatorforidlewkspace.c",
                   "msg.c",
-                  "barrier.c",
-                  "part.c",
-                  "ratemon.c",
-                  "extension.c",
+                  "sem.c",
+                  "tasks.c",
+                  "taskinitdefault.c",
+                  "libiozeroiops.c",
+                  "default-configuration.c",
+                  "sysinitverbose.c",
               }
 
-              hardened_ll_files = []
+              kernel_ll_files = [bootcard_ll]
               new_args = []
 
               for a in args:
                   if a.endswith(".o"):
                       src_c = get_src_name(a)
                       if src_c and src_c not in CONFDEFS_FALLBACKS:
-                          ll_path = os.path.join(raw_dir, f"{src_c}.ll")
+                          ll_path = os.path.join(raw_kernel_dir, f"{src_c}.ll")
+                          if not os.path.exists(ll_path):
+                              ll_path = os.path.join(raw_dir, f"{src_c}.ll")
                           if os.path.exists(ll_path):
-                              hardened_ll_files.append(ll_path)
+                              kernel_ll_files.append(ll_path)
                               continue
                   new_args.append(a)
 
-              ll_files = sorted(list(set(hardened_ll_files)))
+              kernel_ll_files = sorted(list(set(kernel_ll_files)))
+              app_ll_files = sorted(list(set(app_ll_files)))
+              ll_files = kernel_ll_files + app_ll_files
 
               if ll_files:
-                  print(f"[aspis-ar] Avvio pipeline monolitica ASPIS ({len(ll_files)} moduli IR)...", file=sys.stderr)
+                  print(f"[aspis-ar] Avvio pipeline monolitica ASPIS ({len(kernel_ll_files)} moduli Kernel + {len(app_ll_files)} moduli App = {len(ll_files)} moduli IR totali)...", file=sys.stderr)
+                  manifest_path = f"{out_dir}/00_manifest_monolithic.txt"
                   s1 = f"{out_dir}/01_kernel_linked.ll"
                   s2 = f"{out_dir}/02_kernel_lower_switch.ll"
                   s3 = f"{out_dir}/03_kernel_func_ret.ll"
@@ -891,6 +951,19 @@ actions:
                   s7 = f"{out_dir}/07_kernel_globals.ll"
                   mono_o = f"{out_dir}/kernel_monolithic.o"
 
+                  with open(manifest_path, "w") as mf:
+                      print(f"TOTALE MODULI LINKATI NEL MONOLITE: {len(ll_files)}", file=mf)
+                      print(f"  - Moduli Kernel RTEMS : {len(kernel_ll_files)}", file=mf)
+                      print(f"  - Moduli Benchmark App: {len(app_ll_files)}", file=mf)
+                      print("", file=mf)
+                      print("=== MODULI APPLICAZIONE BENCHMARK ===", file=mf)
+                      for p in app_ll_files:
+                          print(f"  [APP]    {os.path.basename(p)}", file=mf)
+                      print("", file=mf)
+                      print("=== MODULI KERNEL RTEMS ===", file=mf)
+                      for p in kernel_ll_files:
+                          print(f"  [KERNEL] {os.path.basename(p)}", file=mf)
+
                   subprocess.run([LLVM_LINK, "-S"] + ll_files + ["-o", s1], check=True)
                   subprocess.run([OPT, "-passes=lower-switch", s1, "-o", s2, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=func-ret-to-ref", s2, "-o", s3, "-S"], check=True)
@@ -899,7 +972,24 @@ actions:
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", s5, "-o", s6, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", s6, "-o", s7, "-S"], check=True)
                   subprocess.run([CLANG, "--target=arm-rtems7", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-gdwarf-4", "-g", "-c", s7, "-o", mono_o], check=True)
-                  print(f"[aspis-ar] Pipeline monolitica completata: {mono_o}", file=sys.stderr)
+
+                  try:
+                      if os.path.exists(persist_dir):
+                          shutil.rmtree(persist_dir)
+                      os.makedirs(f"{persist_dir}/stages", exist_ok=True)
+                      os.makedirs(f"{persist_dir}/raw_ll/kernel", exist_ok=True)
+                      os.makedirs(f"{persist_dir}/raw_ll/app", exist_ok=True)
+                      shutil.copyfile(manifest_path, f"{persist_dir}/00_manifest_monolithic.txt")
+                      for stg in (s1, s2, s3, s4, s5, s6, s7):
+                          shutil.copyfile(stg, f"{persist_dir}/stages/{os.path.basename(stg)}")
+                      for p in kernel_ll_files:
+                          shutil.copyfile(p, f"{persist_dir}/raw_ll/kernel/{os.path.basename(p)}")
+                      for p in app_ll_files:
+                          shutil.copyfile(p, f"{persist_dir}/raw_ll/app/{os.path.basename(p)}")
+                  except Exception as ex:
+                      print(f"[aspis-ar] Warning copia persist_dir: {ex}", file=sys.stderr)
+
+                  print(f"[aspis-ar] Pipeline monolitica completata: {mono_o} (IR salvata in {out_dir} e {persist_dir})", file=sys.stderr)
 
                   new_args.append(mono_o)
 
@@ -915,6 +1005,8 @@ actions:
           os.execv(LLVM_AR, [LLVM_AR] + args)
           ''')
 
+      import shutil
+      shutil.rmtree('/tmp/aspis_monolithic', ignore_errors=True)
       ar_wrapper_path = os.path.join(conf.bldnode.abspath(), 'aspis-ar')
       with open(ar_wrapper_path, 'w') as fp:
           fp.write(ar_wrapper_src)

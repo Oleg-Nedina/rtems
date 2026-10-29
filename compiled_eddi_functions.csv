@@ -1,0 +1,9 @@
+fn_name
+random_set_seed_dup
+random_get_int_dup
+random_get_dup
+random_get_array_dup
+random_get_sarray_dup
+quick_sort_dup
+random_get_barray_dup
+random_get_iarray_dup

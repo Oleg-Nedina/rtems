@@ -93,7 +93,7 @@ Objects_Information
     &_POSIX_Objects[ 0 ]
 };
 
-static void __attribute__((noinline, annotate("exclude"))) rtems_initialize_data_structures( void )
+static void rtems_initialize_data_structures( void )
 {
   /*
    *  Dispatching and interrupts are disabled until the end of the
@@ -143,7 +143,7 @@ RTEMS_SYSINIT_ITEM(
   RTEMS_SYSINIT_ORDER_MIDDLE
 );
 
-void __attribute__((noinline, annotate("exclude"))) rtems_initialize_executive( void )
+void rtems_initialize_executive( void )
 {
   const rtems_sysinit_item *item;
 

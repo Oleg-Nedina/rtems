@@ -3,7 +3,7 @@
 
 #define N 16
 #define ASPIS_CHECKPOINT \
-  __attribute__((annotate("exclude"), noinline, optnone))
+  __attribute__((noinline, optnone))
 
 uint32_t workload_run(void);
 

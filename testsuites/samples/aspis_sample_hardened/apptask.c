@@ -8,7 +8,7 @@
 #include <stdint.h>
 
 #define ASPIS_CHECKPOINT \
-  __attribute__((annotate("exclude"), noinline, optnone))
+  __attribute__((noinline, optnone))
 
 uint32_t workload_run(void);
 void aspis_test_injection_point(void) ASPIS_CHECKPOINT;

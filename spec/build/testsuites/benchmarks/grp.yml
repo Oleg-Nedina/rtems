@@ -15,29 +15,7 @@ ldflags:
 - -Wl,--wrap=putchar
 links:
 - role: build-dependency
-  uid: dhrystone
-- role: build-dependency
-  uid: linpack
-- role: build-dependency
-  uid: whetstone
-- role: build-dependency
-  uid: bench_acas
-- role: build-dependency
-  uid: bench_ann
-- role: build-dependency
-  uid: bench_canny
-- role: build-dependency
-  uid: bench_img_scaling
-- role: build-dependency
-  uid: bench_jpeg
-- role: build-dependency
-  uid: bench_latnav
-- role: build-dependency
-  uid: bench_all_seq
-- role: build-dependency
-  uid: bench_all_concurrent
-- role: build-dependency
-  uid: bench_eddi_stress
+  uid: bench_prof_monolithic
 type: build
 use-after:
 - rtemstest

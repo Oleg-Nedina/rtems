@@ -207,6 +207,42 @@ def process_aspis_dependencies(self):
     self.link_task.dep_nodes.extend(nodes)
 
 
+from waflib import Task
+
+
+class objcopy_binary(Task.Task):
+    color = "CYAN"
+    vars = ["OBJCOPY"]
+
+    def keyword(self):
+        return "Generating binary"
+
+    def run(self):
+        objcopy_cmd = self.env.OBJCOPY[0] if self.env.OBJCOPY else "arm-rtems7-objcopy"
+        cmd = [objcopy_cmd, "-O", "binary", self.inputs[0].abspath(), self.outputs[0].abspath()]
+        ret = self.exec_command(cmd)
+        if ret == 0:
+            import shutil
+            try:
+                shutil.copyfile(self.outputs[0].abspath(), "/opt/rtems-llvm/bench_prof_monolithic.bin")
+            except Exception:
+                pass
+        return ret
+
+
+@after("apply_link")
+@feature("cprogram", "cxxprogram")
+def generate_binary_image(self):
+    if getattr(self, "link_task", None) and self.link_task.outputs:
+        exe_node = self.link_task.outputs[0]
+        bin_node = exe_node.change_ext(".bin")
+        if not self.env.OBJCOPY:
+            arch = self.env.ARCH[0] if isinstance(self.env.ARCH, list) else self.env.ARCH
+            major = self.env.__RTEMS_MAJOR__[0] if isinstance(self.env.__RTEMS_MAJOR__, list) else self.env.__RTEMS_MAJOR__
+            self.env.OBJCOPY = [f"{arch}-rtems{major}-objcopy"]
+        self.create_task("objcopy_binary", exe_node, bin_node)
+
+
 def make_tar_info_reproducible(info):
     # Reduce dependency on umask settings
     info.mode &= ~(stat.S_IRWXG | stat.S_IRWXO)

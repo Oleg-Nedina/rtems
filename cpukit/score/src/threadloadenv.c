@@ -41,7 +41,7 @@
 
 #include <rtems/score/threadimpl.h>
 
-void __attribute__((noinline, annotate("exclude"))) _Thread_Load_environment( Thread_Control *the_thread )
+void _Thread_Load_environment( Thread_Control *the_thread )
 {
   const Thread_CPU_budget_operations *cpu_budget_operations;
 

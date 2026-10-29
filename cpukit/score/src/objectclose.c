@@ -41,7 +41,7 @@
 
 #include <rtems/score/objectimpl.h>
 
-void __attribute__((annotate("exclude"))) _Objects_Close(
+void _Objects_Close(
   const Objects_Information *information,
   Objects_Control           *the_object
 )

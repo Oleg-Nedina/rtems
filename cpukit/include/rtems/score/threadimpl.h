@@ -133,16 +133,14 @@ void _Thread_Iterate( Thread_Visitor visitor, void *arg );
  *
  * @param[out] information Information to initialize.
  */
-void _Thread_Initialize_information( Thread_Information *information )
-  __attribute__((noinline, annotate("exclude")));
+void _Thread_Initialize_information( Thread_Information *information );
 
 /**
  * @brief Initializes thread handler.
  *
  * This routine performs the initialization necessary for this handler.
  */
-void _Thread_Handler_initialization( void )
-  __attribute__((noinline, annotate("exclude")));
+void _Thread_Handler_initialization( void );
 
 /**
  * @brief Creates idle thread.
@@ -151,8 +149,7 @@ void _Thread_Handler_initialization( void )
  *
  * @warning No thread should be created before this one.
  */
-void _Thread_Create_idle( void )
-  __attribute__((noinline, annotate("exclude")));
+void _Thread_Create_idle( void );
 
 /**
  * @brief Starts thread multitasking.
@@ -245,7 +242,7 @@ Status_Control _Thread_Initialize(
   Thread_Information         *information,
   Thread_Control             *the_thread,
   const Thread_Configuration *config
-) __attribute__((noinline, annotate("exclude")));
+);
 
 /**
  * @brief Frees the thread.
@@ -260,7 +257,7 @@ Status_Control _Thread_Initialize(
 void _Thread_Free(
   Thread_Information *information,
   Thread_Control     *the_thread
-) __attribute__((noinline, annotate("exclude")));
+);
 
 /**
  * @brief Starts the specified thread.
@@ -970,8 +967,7 @@ static inline Thread_Information *_Thread_Get_objects_information(
  * @param id The id of the thread.
  * @param lock_context The lock context.
  */
-Thread_Control *_Thread_Get( Objects_Id id, ISR_lock_Context *lock_context )
-  __attribute__((noinline, annotate("exclude")));
+Thread_Control *_Thread_Get( Objects_Id id, ISR_lock_Context *lock_context );
 
 /**
  * @brief Gets the identifier of the calling thread.

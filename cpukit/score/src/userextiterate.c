@@ -47,7 +47,7 @@
 
 #include <rtems/score/userextimpl.h>
 
-User_extensions_List __attribute__((annotate("exclude"))) _User_extensions_List = {
+User_extensions_List _User_extensions_List = {
   CHAIN_INITIALIZER_EMPTY( _User_extensions_List.Active ),
   CHAIN_ITERATOR_REGISTRY_INITIALIZER( _User_extensions_List.Iterators )
 #if defined( RTEMS_SMP )
@@ -56,7 +56,7 @@ User_extensions_List __attribute__((annotate("exclude"))) _User_extensions_List 
 #endif
 };
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_create_visitor(
+void _User_extensions_Thread_create_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -71,7 +71,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_crea
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_delete_visitor(
+void _User_extensions_Thread_delete_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -84,7 +84,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_dele
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_start_visitor(
+void _User_extensions_Thread_start_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -97,7 +97,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_star
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_restart_visitor(
+void _User_extensions_Thread_restart_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -110,7 +110,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_rest
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_begin_visitor(
+void _User_extensions_Thread_begin_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -125,7 +125,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_begi
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_exitted_visitor(
+void _User_extensions_Thread_exitted_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -140,7 +140,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_exit
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Fatal_visitor(
+void _User_extensions_Fatal_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -157,7 +157,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Fatal_visit
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_terminate_visitor(
+void _User_extensions_Thread_terminate_visitor(
   Thread_Control              *executing,
   void                        *arg,
   const User_extensions_Table *callouts
@@ -173,7 +173,7 @@ void __attribute__((noinline, annotate("exclude"))) _User_extensions_Thread_term
   }
 }
 
-void __attribute__((noinline, annotate("exclude"))) _User_extensions_Iterate(
+void _User_extensions_Iterate(
   void                    *arg,
   User_extensions_Visitor  visitor,
   Chain_Iterator_direction direction

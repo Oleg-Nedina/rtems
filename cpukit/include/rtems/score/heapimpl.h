@@ -141,7 +141,7 @@ void *_Heap_Allocate_aligned_with_boundary(
   uintptr_t     size,
   uintptr_t     alignment,
   uintptr_t     boundary
-) __attribute__((noinline, annotate("exclude")));
+);
 
 /**
  * @brief Allocates an aligned memory area.
@@ -193,8 +193,7 @@ static inline void *_Heap_Allocate( Heap_Control *heap, uintptr_t size )
  * @retval true The allocated memory area was successfully freed.
  * @retval false The method failed.
  */
-bool _Heap_Free( Heap_Control *heap, void *addr )
-  __attribute__((noinline, annotate("exclude")));
+bool _Heap_Free( Heap_Control *heap, void *addr );
 
 /**
  * @brief Verifies the integrity of the heap.

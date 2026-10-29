@@ -47,7 +47,7 @@
 #include <rtems/score/userextimpl.h>
 #include <rtems/score/watchdogimpl.h>
 
-void __attribute__((noinline, annotate("exclude"))) _Thread_Free(
+void _Thread_Free(
   Thread_Information *information,
   Thread_Control     *the_thread
 )
@@ -229,7 +229,7 @@ static void _Thread_Initialize_scheduler_and_wait_nodes(
 #endif
 }
 
-static bool __attribute__((noinline, annotate("exclude"))) _Thread_Try_initialize(
+static bool _Thread_Try_initialize(
   Thread_Information         *information,
   Thread_Control             *the_thread,
   const Thread_Configuration *config
@@ -380,7 +380,7 @@ static bool __attribute__((noinline, annotate("exclude"))) _Thread_Try_initializ
   return _User_extensions_Thread_create( the_thread );
 }
 
-Status_Control __attribute__((noinline, annotate("exclude"))) _Thread_Initialize(
+Status_Control _Thread_Initialize(
   Thread_Information         *information,
   Thread_Control             *the_thread,
   const Thread_Configuration *config

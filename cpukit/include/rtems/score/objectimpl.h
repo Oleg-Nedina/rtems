@@ -148,7 +148,6 @@ void _Objects_Shrink_information( Objects_Information *information );
  *
  * @param information The object information to be initialized.
  */
-__attribute__((noinline, annotate("exclude")))
 void _Objects_Initialize_information( Objects_Information *information );
 
 /**
@@ -300,7 +299,7 @@ Objects_Control *_Objects_Get(
   Objects_Id                 id,
   ISR_lock_Context          *lock_context,
   const Objects_Information *information
-) __attribute__((annotate("exclude")));
+);
 
 /**
  * @brief  Maps object ids to object control blocks.
@@ -325,7 +324,7 @@ Objects_Control *_Objects_Get(
 Objects_Control *_Objects_Get_no_protection(
   Objects_Id                 id,
   const Objects_Information *information
-) __attribute__((annotate("exclude")));
+);
 
 /**
  * @brief Gets the next open object after the specified object identifier.
@@ -364,7 +363,7 @@ Objects_Control *_Objects_Get_next(
 Objects_Information *_Objects_Get_information(
   Objects_APIs the_api,
   uint16_t     the_class
-) __attribute__((noinline, annotate("exclude")));
+);
 
 /**
  * @brief Gets information of an object from an ID.
@@ -378,8 +377,7 @@ Objects_Information *_Objects_Get_information(
  *         for the class of objects which corresponds to this object ID.
  * @retval NULL An error occurred.
  */
-Objects_Information *_Objects_Get_information_id( Objects_Id id )
-  __attribute__((noinline, annotate("exclude")));
+Objects_Information *_Objects_Get_information_id( Objects_Id id );
 
 /**
  * @brief Returns if the object has a string name.
@@ -494,7 +492,7 @@ void _Objects_Namespace_remove_string(
 void _Objects_Close(
   const Objects_Information *information,
   Objects_Control           *the_object
-) __attribute__((annotate("exclude")));
+);
 
 /**
  * @brief Returns the count of active objects.

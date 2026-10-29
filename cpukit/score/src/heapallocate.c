@@ -213,7 +213,7 @@ static uintptr_t _Heap_Check_block(
   return 0;
 }
 
-void * __attribute__((noinline, annotate("exclude"))) _Heap_Allocate_aligned_with_boundary(
+void *_Heap_Allocate_aligned_with_boundary(
   Heap_Control *heap,
   uintptr_t     alloc_size,
   uintptr_t     alignment,

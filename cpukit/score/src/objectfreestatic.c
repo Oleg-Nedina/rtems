@@ -41,7 +41,7 @@
 #include <rtems/score/objectdata.h>
 #include <rtems/score/chainimpl.h>
 
-void __attribute__((annotate("exclude"))) _Objects_Free_static(
+void _Objects_Free_static(
   Objects_Information *information,
   Objects_Control     *the_object
 )

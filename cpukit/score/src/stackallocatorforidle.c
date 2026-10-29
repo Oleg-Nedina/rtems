@@ -41,7 +41,7 @@
 #include <rtems/score/stack.h>
 #include <rtems/score/assert.h>
 
-void * __attribute__((noinline, annotate("exclude"))) _Stack_Allocator_allocate_for_idle_static(
+void *_Stack_Allocator_allocate_for_idle_static(
   uint32_t cpu_index,
   size_t  *storage_size
 )

@@ -349,8 +349,7 @@ Objects_Control *_Objects_Allocate_none( Objects_Information *information );
  * @retval NULL No inactive object is available.
  * @retval object An inactive object.
  */
-Objects_Control *_Objects_Allocate_static( Objects_Information *information )
-  __attribute__((annotate("exclude")));
+Objects_Control *_Objects_Allocate_static( Objects_Information *information );
 
 /**
  * @brief Return an inactive object or NULL.
@@ -377,7 +376,7 @@ Objects_Control *_Objects_Allocate_unlimited(
 void _Objects_Free_static(
   Objects_Information *information,
   Objects_Control     *the_object
-) __attribute__((annotate("exclude")));
+);
 
 /**
  * @brief Free the object.
@@ -413,7 +412,7 @@ void _Objects_Free_unlimited(
  *   objects without a string name.
  */
 #define OBJECTS_INFORMATION_DEFINE_ZERO( name, api, cls, nl ) \
-  Objects_Information name##_Information __attribute__((annotate("exclude"))) = { \
+  Objects_Information name##_Information = {                  \
     _Objects_Build_id( api, cls, 1, 0 ),                      \
     NULL,                                                     \
     _Objects_Allocate_none,                                   \

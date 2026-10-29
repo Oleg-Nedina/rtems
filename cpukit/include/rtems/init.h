@@ -101,8 +101,7 @@ extern "C" {
  * - The directive will not return to the caller.
  * @endparblock
  */
-RTEMS_NO_RETURN void rtems_initialize_executive( void )
-  __attribute__((noinline, annotate("exclude")));
+RTEMS_NO_RETURN void rtems_initialize_executive( void );
 
 /* Generated from spec:/rtems/fatal/if/shutdown-executive */
 
