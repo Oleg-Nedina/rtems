@@ -41,7 +41,7 @@
 #include <rtems/score/wkspace.h>
 #include <rtems/sysinit.h>
 
-Heap_Control _Workspace_Area;
+__attribute__((annotate("exclude"))) Heap_Control _Workspace_Area;
 
 RTEMS_SYSINIT_ITEM(
   _Workspace_Handler_initialization,
