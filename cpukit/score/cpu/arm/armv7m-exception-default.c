@@ -42,7 +42,7 @@
 
 #ifdef ARM_MULTILIB_ARCH_V7M
 
-void __attribute__((naked)) _ARMV7M_Exception_default( void )
+void __attribute__((naked, annotate("exclude"))) _ARMV7M_Exception_default( void )
 {
     /* On exception entry, ARMv7M saves context state onto a stack pointed to
      * by either MSP or PSP. The value stored in LR indicates whether we were

@@ -52,7 +52,7 @@ void __attribute__((weak)) _Thread_Dispatch_dup( void )
 }
 
 
-static void __attribute__((naked)) _ARMV7M_Thread_dispatch( void )
+static void __attribute__((naked, annotate("exclude"))) _ARMV7M_Thread_dispatch( void )
 {
   __asm__ volatile (
     "bl _Thread_Dispatch_dup\n"

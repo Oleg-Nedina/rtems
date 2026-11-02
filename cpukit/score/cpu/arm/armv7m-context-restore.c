@@ -43,7 +43,7 @@
 
 #ifdef ARM_MULTILIB_ARCH_V7M
 
-void __attribute__((naked)) _CPU_Context_restore(
+void __attribute__((naked, annotate("exclude"))) _CPU_Context_restore(
   Context_Control *heir
 )
 {

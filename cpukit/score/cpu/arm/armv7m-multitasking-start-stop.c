@@ -42,7 +42,7 @@
 
 #ifdef ARM_MULTILIB_ARCH_V7M
 
-void __attribute__((naked)) _ARMV7M_Start_multitasking(
+void __attribute__((naked, annotate("exclude"))) _ARMV7M_Start_multitasking(
   Context_Control *heir
 )
 {

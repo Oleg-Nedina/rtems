@@ -42,9 +42,9 @@
 
 #ifndef RTEMS_SMP
 
-void __attribute__((naked)) __aeabi_read_tp(void);
+void __attribute__((naked, annotate("exclude"))) __aeabi_read_tp(void);
 
-void __attribute__((naked)) __aeabi_read_tp(void)
+void __attribute__((naked, annotate("exclude"))) __aeabi_read_tp(void)
 {
   __asm__ volatile (
     "ldr r0, =_Per_CPU_Information\n"
