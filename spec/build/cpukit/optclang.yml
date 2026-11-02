@@ -971,7 +971,7 @@ actions:
                   subprocess.run([OPT, "-passes=simplifycfg,lower-switch", s4, "-o", s5, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libRASM.so", "-debug-enabled=true", "-passes=rasm-verify", s5, "-o", s6, "-S"], check=True)
                   subprocess.run([OPT, f"-load-pass-plugin={PASSES}/libEDDI.so", "-debug-enabled=true", "-passes=duplicate-globals", s6, "-o", s7, "-S"], check=True)
-                  subprocess.run([CLANG, "--target=arm-rtems7", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-gdwarf-4", "-g", "-c", s7, "-o", mono_o], check=True)
+                  subprocess.run([CLANG, "--target=thumbv7em-unknown-rtems7-eabi", "--sysroot=/opt/rtems-llvm/rtems/arm-rtems7", "-mcpu=cortex-m4", "-mthumb", "-mfloat-abi=hard", "-mfpu=fpv4-sp-d16", "-ffunction-sections", "-fdata-sections", "-O2", "-gdwarf-4", "-g", "-c", s7, "-o", mono_o], check=True)
 
                   try:
                       if os.path.exists(persist_dir):
