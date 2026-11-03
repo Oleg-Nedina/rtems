@@ -98,7 +98,8 @@ RTEMS_DEFINE_GLOBAL_SYMBOL( _ISR_Stack_size, CONFIGURE_INTERRUPT_STACK_SIZE );
 char _ISR_Stack_area_begin
   [ _CONFIGURE_INTERRUPT_STACK_AREA_SIZE ] RTEMS_ALIGNED(
     CPU_INTERRUPT_STACK_ALIGNMENT
-  ) RTEMS_SECTION( ".rtemsstack.interrupt" );
+  ) RTEMS_SECTION( ".rtemsstack.interrupt" )
+    __attribute__((annotate("exclude")));
 
 RTEMS_DEFINE_GLOBAL_SYMBOL(
   _ISR_Stack_area_end,

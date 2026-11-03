@@ -45,7 +45,7 @@
 #include <rtems/score/threadimpl.h>
 #include <rtems/score/statesimpl.h>
 
-Status_Control _CORE_message_queue_Submit(
+Status_Control __attribute__((annotate("exclude"))) _CORE_message_queue_Submit(
   CORE_message_queue_Control     *the_message_queue,
   Thread_Control                 *executing,
   const void                     *buffer,
