@@ -305,22 +305,14 @@ static void UARTOutput(void *pvParameters)
         xQueueReceive(xCRCLatnavQueue, &ResultLatnav, TIMEOUT_QUEUES);
 
         printf(
-            "%.3f [%.3f MHz] i:%lu\tcrcAcas:0x%08lx crcAnn:0x%08lx crcCanny:0x%08lx crcImgScaling:0x%08lx crcJpeg:0x%08lx crcLatnav:0x%08lx tAcas:%.5fs tAnn:%.5fs tCanny:%.5fs tImgScaling:%.5fs tJpeg:%.5fs tLatnav:%.5fs\n",
-            (double)T,
-            (double)frequency,
+            "i:%lu\tcrcAcas:0x%08lx crcAnn:0x%08lx crcCanny:0x%08lx crcImgScaling:0x%08lx crcJpeg:0x%08lx crcLatnav:0x%08lx\n",
             (unsigned long)(++counter),
             (unsigned long)ResultAcas.crc,
             (unsigned long)ResultAnn.crc,
             (unsigned long)ResultCanny.crc,
             (unsigned long)ResultImgScaling.crc,
             (unsigned long)ResultJpeg.crc,
-            (unsigned long)ResultLatnav.crc,
-            (double)(ResultAcas.tDelta / COUNTS_PER_SECOND),
-            (double)(ResultAnn.tDelta / COUNTS_PER_SECOND),
-            (double)(ResultCanny.tDelta / COUNTS_PER_SECOND),
-            (double)(ResultImgScaling.tDelta / COUNTS_PER_SECOND),
-            (double)(ResultJpeg.tDelta / COUNTS_PER_SECOND),
-            (double)(ResultLatnav.tDelta / COUNTS_PER_SECOND)
+            (unsigned long)ResultLatnav.crc
         );
 
         xSemaphoreGive(xIterationDone);
